@@ -48,7 +48,9 @@ public class MonteCarloLB {
 		for (int i = 0; i < BUCKET_TIMES_MILLIS.length; i++)
 			System.out.print(BUCKET_TIMES_MILLIS[i] + " ms ");
 
-		System.out.println("");
+		System.out.println();
+		System.out.println();
+		System.out.print("Request distribution: ");
 
 		REQS_PER_BUCKET = new int[BUCKET_SIZE_PERCENTAGES.length];
 
@@ -56,8 +58,11 @@ public class MonteCarloLB {
 			int myReqs = (int) (REQUESTS_PER_SEC * BUCKET_SIZE_PERCENTAGES[i] / 100);
 			REQS_PER_BUCKET[i] = (myReqs == 0) ? 1 : myReqs;
 
-			System.out.println(REQS_PER_BUCKET[i] + " requests for bucket: " + i);
+			System.out.print("(" + i + ") " + REQS_PER_BUCKET[i] + " requests ");
 		}
+
+		System.out.println();
+		System.out.println();
 	}
 
 	public static void main(String[] anArgs) throws Exception {
@@ -134,7 +139,7 @@ public class MonteCarloLB {
 				break;
 			else {
 				myCurrentThrottle += 5;
-				System.out.println("");
+				System.out.println();
 			}
 		}
 
