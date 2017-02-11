@@ -1,6 +1,9 @@
 import java.util.*;
+import java.util.concurrent.*;
 
 public class MonteCarloLB {
+	private static final int NUM_CORES = 4;
+	
 	// Percentage of requests that fall in 100ms ranges starting at 0ms (long-tailed distribution so trimmed & not summing to 100%)
 	//
 	private static final double[] _tpBucketSizePercentages = {12.62, 25.58, 9.53, 7.04, 6.15, 5.42, 4.58, 3.74, 
@@ -10,7 +13,7 @@ public class MonteCarloLB {
 
 	// Number of cycles to run per throttle setting
 	//
-	private static final int _simsPerSetting = 10;
+	private static final int _simsPerSetting = 12;
 
 	// How long each simulated cycle should be
 	//
@@ -57,7 +60,10 @@ public class MonteCarloLB {
 		}
 	}
 
-	public static void main(String[] anArgs) {
+	public static void main(String[] anArgs) throws Exception {
+		ThreadPoolExecutor myExecutor = new ThreadPoolExecutor(NUM_CORES, NUM_CORES, 30,
+				TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+		
 		/*
 			To simulate a partner specific load we'd need to generate a random load for them
 			and then a further random background load to run alongside and in sum be the correct
@@ -102,24 +108,25 @@ public class MonteCarloLB {
 		while (true) {
 			long myRequestsTotal = 0;
 			long myBreachesTotal = 0;
+			LinkedList<FutureTask<Simulator>> mySims = new LinkedList<>();
 
 			System.out.println("Throttle limit: " + myCurrentThrottle + " per server of which there are: " + _totalServers);
 
 			for (int i = 0; i < _simsPerSetting; i++) {
-				System.out.print(".");
-				// Set up the network we wish to simulate and tell it how fast to run reqs per sec wise
-				//
-				LB myBalancer = new LB(_totalServers, new ThrottlePolicy(myCurrentThrottle, 1000), _requestsPerSec);
-
-				myBalancer.allocate(myRequestDurations);
-
-				for (Node myNode : myBalancer.getNodes()) {
-					myRequestsTotal = myRequestsTotal + myNode.getRequestCount();
-					myBreachesTotal = myBreachesTotal + myNode.getBreaches().size();
-				}
+				FutureTask<Simulator> myTask = new FutureTask<>(new Simulator(myCurrentThrottle, myRequestDurations));
+				mySims.add(myTask);
+				myExecutor.execute(myTask);
 			}
 
-			System.out.println("");
+			for (FutureTask<Simulator> myTask : mySims) {
+				Simulator myResult = myTask.get();
+
+				myRequestsTotal = myRequestsTotal + myResult.getRequestTotal();
+				myBreachesTotal = myBreachesTotal + myResult.getBreachTotal();
+				System.out.print(".");
+			}
+
+			System.out.println();
 			System.out.println("Total Requests: " + myRequestsTotal);
 			System.out.println("Total Breaches: " + myBreachesTotal);
 
@@ -129,6 +136,43 @@ public class MonteCarloLB {
 				myCurrentThrottle += 5;
 				System.out.println("");
 			}
+		}
+
+		myExecutor.shutdownNow();
+	}
+
+	private static class Simulator implements Callable<Simulator> {
+		private final int _throttlePoint;
+		private final List<Long> _requestDurations;
+		private long _requestTotal = 0;
+		private long _breachTotal = 0;
+
+		Simulator(int aThrottlePoint, List<Long> aRequestDurations) {
+			_throttlePoint = aThrottlePoint;
+			_requestDurations = aRequestDurations;
+		}
+
+		@Override
+		public Simulator call() throws Exception {
+			LB myBalancer = new LB(_totalServers,
+					new ThrottlePolicy(_throttlePoint, 1000), _requestsPerSec);
+
+			myBalancer.allocate(_requestDurations);
+
+			for (Node myNode : myBalancer.getNodes()) {
+				_requestTotal += myNode.getRequestCount();
+				_breachTotal += myNode.getBreaches().size();
+			}
+
+			return this;
+		}
+
+		public long getRequestTotal() {
+			return _requestTotal;
+		}
+
+		public long getBreachTotal() {
+			return _breachTotal;
 		}
 	}
 
