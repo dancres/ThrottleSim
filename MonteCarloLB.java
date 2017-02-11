@@ -103,9 +103,6 @@ public class MonteCarloLB {
 			}
 		}
 
-		System.out.println("Shuffle " + myRequestDurations.size() + " requests");
-		Collections.shuffle(myRequestDurations);
-
 		System.out.println("Run");
 
 		int myCurrentThrottle = THROTTLE_BASE;
@@ -118,7 +115,8 @@ public class MonteCarloLB {
 			System.out.println("Throttle limit: " + myCurrentThrottle + " per server of which there are: " + TOTAL_SERVERS);
 
 			for (int i = 0; i < SIMS_PER_SETTING; i++) {
-				FutureTask<Simulator> myTask = new FutureTask<>(new Simulator(myCurrentThrottle, myRequestDurations));
+				FutureTask<Simulator> myTask =
+						new FutureTask<>(new Simulator(myCurrentThrottle, new ArrayList<>(myRequestDurations)));
 				mySims.add(myTask);
 				myExecutor.execute(myTask);
 			}
@@ -159,6 +157,8 @@ public class MonteCarloLB {
 
 		@Override
 		public Simulator call() throws Exception {
+			Collections.shuffle(_requestDurations);
+			
 			LB myBalancer = new LB(TOTAL_SERVERS,
 					new ThrottlePolicy(_throttlePoint, 1000), REQUESTS_PER_SEC);
 
