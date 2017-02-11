@@ -1,7 +1,7 @@
 import java.util.*;
 
 public class MonteCarloLB {
-	// Percentage of requests that fall in 100ms ranges starting at 0ms
+	// Percentage of requests that fall in 100ms ranges starting at 0ms (long-tailed distribution so trimmed & not summing to 100%)
 	//
 	private static final double[] _tpBucketSizePercentages = {12.62, 25.58, 9.53, 7.04, 6.15, 5.42, 4.58, 3.74, 
 		3.01, 2.44, 2.01, 1.70, 1.45, 1.25, 1.09, 0.97, 0.86, 0.77, 0.70, 0.64, 0.59, 0.65, 0.56, 0.50, 0.46,
