@@ -6,57 +6,57 @@ public class MonteCarloLB {
 	
 	// Percentage of requests that fall in 100ms ranges starting at 0ms (long-tailed distribution so trimmed & not summing to 100%)
 	//
-	private static final double[] _tpBucketSizePercentages = {12.62, 25.58, 9.53, 7.04, 6.15, 5.42, 4.58, 3.74, 
+	private static final double[] BUCKET_SIZE_PERCENTAGES = {12.62, 25.58, 9.53, 7.04, 6.15, 5.42, 4.58, 3.74,
 		3.01, 2.44, 2.01, 1.70, 1.45, 1.25, 1.09, 0.97, 0.86, 0.77, 0.70, 0.64, 0.59, 0.65, 0.56, 0.50, 0.46,
 		0.42, 0.38, 0.35, 0.32, 0.29, 0.26, 0.24, 0.22, 0.20, 0.19, 0.17, 0.16, 0.15, 0.13, 0.12, 0.11, 0.10, 
 		0.10, 0.09, 0.08, 0.08, 0.07, 0.07, 0.06, 0.06, 0.05, 0.05, 0.05, 0.04, 0.04, 0.04 }; // % request  per bucket
 
 	// Number of cycles to run per throttle setting
 	//
-	private static final int _simsPerSetting = 12;
+	private static final int SIMS_PER_SETTING = 12;
 
 	// How long each simulated cycle should be
 	//
-	private static final int _runTimeInSeconds = 60;
+	private static final int RUN_TIME_IN_SECONDS = 60;
 
 	// Requests per minute
 	//
-	private static final int _requestsPerMinute = 180000;
-	private static final int _requestsPerSec = _requestsPerMinute / 60;
+	private static final int REQUESTS_PER_MINUTE = 180000;
+	private static final int REQUESTS_PER_SEC = REQUESTS_PER_MINUTE / 60;
 
 	// The initial setting for the per machine throttle
 	//
-	private static final int _throttleBase = 20;
+	private static final int THROTTLE_BASE = 20;
 
 	// Number of machines in the cluster
 	//
-	private static final int _totalServers = 200;
+	private static final int TOTAL_SERVERS = 200;
 
-	private static final int[] _tpBucketTimesMillis;
-	private static final int[] _tpReqsPerBucket;
+	private static final int[] BUCKET_TIMES_MILLIS;
+	private static final int[] REQS_PER_BUCKET;
 
 	static {
-		_tpBucketTimesMillis = new int[_tpBucketSizePercentages.length + 1];
-		_tpBucketTimesMillis[0] = 0;
+		BUCKET_TIMES_MILLIS = new int[BUCKET_SIZE_PERCENTAGES.length + 1];
+		BUCKET_TIMES_MILLIS[0] = 0;
 
 		System.out.print("Bucket ceilings: ");
 
-		for (int i = 0; i < _tpBucketSizePercentages.length; i++) {
-			_tpBucketTimesMillis[1 + i] = 100 * (1 + i);
+		for (int i = 0; i < BUCKET_SIZE_PERCENTAGES.length; i++) {
+			BUCKET_TIMES_MILLIS[1 + i] = 100 * (1 + i);
 		}
 
-		for (int i = 0; i < _tpBucketTimesMillis.length; i++)
-			System.out.print(_tpBucketTimesMillis[i] + " ms ");
+		for (int i = 0; i < BUCKET_TIMES_MILLIS.length; i++)
+			System.out.print(BUCKET_TIMES_MILLIS[i] + " ms ");
 
 		System.out.println("");
 
-		_tpReqsPerBucket = new int[_tpBucketSizePercentages.length];
+		REQS_PER_BUCKET = new int[BUCKET_SIZE_PERCENTAGES.length];
 
-		for (int i = 0; i < _tpBucketSizePercentages.length; i++) {
-			int myReqs = (int) (_requestsPerSec * _tpBucketSizePercentages[i] / 100);
-			_tpReqsPerBucket[i] = (myReqs == 0) ? 1 : myReqs;
+		for (int i = 0; i < BUCKET_SIZE_PERCENTAGES.length; i++) {
+			int myReqs = (int) (REQUESTS_PER_SEC * BUCKET_SIZE_PERCENTAGES[i] / 100);
+			REQS_PER_BUCKET[i] = (myReqs == 0) ? 1 : myReqs;
 
-			System.out.println(_tpReqsPerBucket[i] + " requests for bucket: " + i);
+			System.out.println(REQS_PER_BUCKET[i] + " requests for bucket: " + i);
 		}
 	}
 
@@ -85,13 +85,13 @@ public class MonteCarloLB {
 		// Now, for each second, allocate the requests in that second according to the bucket percentages (could do this on a per minute
 		// basis but if we did, a run time of less than a minute is tougher to implement).
 		//
-		System.out.println("Run-time (s): " + _runTimeInSeconds + " @ " + _requestsPerMinute + " rpm (" + _requestsPerSec + " rps)");
-		for (int i = 0; i < _runTimeInSeconds; i++) {
-			for (int j = 0; j < _tpBucketSizePercentages.length; j++) {
-				int baseTime = _tpBucketTimesMillis[j];
-				int randomStep = _tpBucketTimesMillis[j+1] - baseTime;
+		System.out.println("Run-time (s): " + RUN_TIME_IN_SECONDS + " @ " + REQUESTS_PER_MINUTE + " rpm (" + REQUESTS_PER_SEC + " rps)");
+		for (int i = 0; i < RUN_TIME_IN_SECONDS; i++) {
+			for (int j = 0; j < BUCKET_SIZE_PERCENTAGES.length; j++) {
+				int baseTime = BUCKET_TIMES_MILLIS[j];
+				int randomStep = BUCKET_TIMES_MILLIS[j+1] - baseTime;
 
-				for (int k = 0 ; k < _tpReqsPerBucket[j]; k++) {
+				for (int k = 0; k < REQS_PER_BUCKET[j]; k++) {
 					long myReqDuration = baseTime + myRandomizer.nextInt(randomStep + 1);
 					myRequestDurations.add(new Long(myReqDuration));
 				}
@@ -103,16 +103,16 @@ public class MonteCarloLB {
 
 		System.out.println("Run");
 
-		int myCurrentThrottle = _throttleBase;
+		int myCurrentThrottle = THROTTLE_BASE;
 
 		while (true) {
 			long myRequestsTotal = 0;
 			long myBreachesTotal = 0;
 			LinkedList<FutureTask<Simulator>> mySims = new LinkedList<>();
 
-			System.out.println("Throttle limit: " + myCurrentThrottle + " per server of which there are: " + _totalServers);
+			System.out.println("Throttle limit: " + myCurrentThrottle + " per server of which there are: " + TOTAL_SERVERS);
 
-			for (int i = 0; i < _simsPerSetting; i++) {
+			for (int i = 0; i < SIMS_PER_SETTING; i++) {
 				FutureTask<Simulator> myTask = new FutureTask<>(new Simulator(myCurrentThrottle, myRequestDurations));
 				mySims.add(myTask);
 				myExecutor.execute(myTask);
@@ -154,8 +154,8 @@ public class MonteCarloLB {
 
 		@Override
 		public Simulator call() throws Exception {
-			LB myBalancer = new LB(_totalServers,
-					new ThrottlePolicy(_throttlePoint, 1000), _requestsPerSec);
+			LB myBalancer = new LB(TOTAL_SERVERS,
+					new ThrottlePolicy(_throttlePoint, 1000), REQUESTS_PER_SEC);
 
 			myBalancer.allocate(_requestDurations);
 
