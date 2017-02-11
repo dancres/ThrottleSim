@@ -25,6 +25,10 @@ public class MonteCarloLB {
 	//
 	private static final int _throttleBase = 20;
 
+	// Number of machines in the cluster
+	//
+	private static final int _totalServers = 200;
+
 	private static final int[] _tpBucketTimesMillis;
 	private static final int[] _tpReqsPerBucket;
 
@@ -99,13 +103,13 @@ public class MonteCarloLB {
 			long myRequestsTotal = 0;
 			long myBreachesTotal = 0;
 
-			System.out.println("Throttle limit: " + myCurrentThrottle);
+			System.out.println("Throttle limit: " + myCurrentThrottle + " per server of which there are: " + _totalServers);
 
 			for (int i = 0; i < _simsPerSetting; i++) {
 				System.out.print(".");
 				// Set up the network we wish to simulate and tell it how fast to run reqs per sec wise
 				//
-				LB myBalancer = new LB(150, new ThrottlePolicy(myCurrentThrottle, 1000), _requestsPerSec);
+				LB myBalancer = new LB(_totalServers, new ThrottlePolicy(myCurrentThrottle, 1000), _requestsPerSec);
 
 				myBalancer.allocate(myRequestDurations);
 
