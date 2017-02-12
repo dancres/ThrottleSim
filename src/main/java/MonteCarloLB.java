@@ -45,7 +45,7 @@ public class MonteCarloLB {
 			BUCKET_TIMES_MILLIS[1 + i] = 100 * (1 + i);
 		}
 
-		for (int i = 0; i < BUCKET_TIMES_MILLIS.length; i++)
+		for (int i = 1; i < BUCKET_TIMES_MILLIS.length; i++)
 			System.out.print(BUCKET_TIMES_MILLIS[i] + " ms ");
 
 		System.out.println();
