@@ -14,65 +14,60 @@ public class MonteCarloLB {
 	
 	// Number of cores to use for simulations
 	//
-	private static int NUM_CORES;
+	private static OptionSpec<Integer> NUM_CORES;
 
 	// Number of cycles to run per throttle setting
 	//
-	private static int SIMS_PER_SETTING;
+	private static OptionSpec<Integer> SIMS_PER_SETTING;
 
 	// How long each simulated cycle should be
 	//
-	private static int RUN_TIME_IN_SECONDS;
+	private static OptionSpec<Integer> RUN_TIME_IN_SECONDS;
 
 	// How many buckets in the distribution to use
 	//
-	private static int MAX_CONTRIBUTING_BUCKET;
+	private static OptionSpec<Integer> MAX_CONTRIBUTING_BUCKET;
 
 	// Requests per minute
 	//
-	private static int REQUESTS_PER_MINUTE;
+	private static OptionSpec<Integer> REQUESTS_PER_MINUTE;
 	private static int REQUESTS_PER_SEC;
 
 	// The initial setting for the per machine throttle
 	//
-	private static int THROTTLE_BASE;
+	private static OptionSpec<Integer> THROTTLE_BASE;
 
 	// Number of machines in the cluster
 	//
-	private static int TOTAL_SERVERS;
+	private static OptionSpec<Integer> TOTAL_SERVERS;
 
 	private static int[] BUCKET_TIMES_MILLIS;
 	private static int[] REQS_PER_BUCKET;
 
-	private static void init(String[] anArgs) {
+	private static OptionSet parseOptions(String[] anArgs) {
 		OptionParser myOp = new OptionParser();
 
-		OptionSpec<Integer> myCores = myOp.accepts("c").withOptionalArg().ofType(Integer.class).defaultsTo(2);
-		OptionSpec<Integer> mySims = myOp.accepts("s").withOptionalArg().ofType(Integer.class).defaultsTo(12);
-		OptionSpec<Integer> myTime = myOp.accepts("t").withOptionalArg().ofType(Integer.class).defaultsTo(60);
-		OptionSpec<Integer> myBucket = myOp.accepts("b").withOptionalArg().ofType(Integer.class).defaultsTo(BUCKET_SIZE_PERCENTAGES.length);
-		OptionSpec<Integer> myRate = myOp.accepts("r").withOptionalArg().ofType(Integer.class).defaultsTo(160000);
-		OptionSpec<Integer> myLimit = myOp.accepts("l").withOptionalArg().ofType(Integer.class).defaultsTo(25);
-		OptionSpec<Integer> myHosts = myOp.accepts("h").withOptionalArg().ofType(Integer.class).defaultsTo(200);
+		NUM_CORES = myOp.accepts("c").withOptionalArg().ofType(Integer.class).defaultsTo(2);
+		SIMS_PER_SETTING = myOp.accepts("s").withOptionalArg().ofType(Integer.class).defaultsTo(12);
+		RUN_TIME_IN_SECONDS = myOp.accepts("t").withOptionalArg().ofType(Integer.class).defaultsTo(60);
+		MAX_CONTRIBUTING_BUCKET = myOp.accepts("b").withOptionalArg().ofType(Integer.class).defaultsTo(BUCKET_SIZE_PERCENTAGES.length);
+		REQUESTS_PER_MINUTE = myOp.accepts("r").withOptionalArg().ofType(Integer.class).defaultsTo(160000);
+		THROTTLE_BASE = myOp.accepts("l").withOptionalArg().ofType(Integer.class).defaultsTo(25);
+		TOTAL_SERVERS = myOp.accepts("h").withOptionalArg().ofType(Integer.class).defaultsTo(200);
 
-		OptionSet myOptions = myOp.parse(anArgs);
+		return myOp.parse(anArgs);
+	}
 
-		NUM_CORES = myCores.value(myOptions);
-		SIMS_PER_SETTING = mySims.value(myOptions);
-		RUN_TIME_IN_SECONDS = myTime.value(myOptions);
-		MAX_CONTRIBUTING_BUCKET = myBucket.value(myOptions);
-		REQUESTS_PER_MINUTE = myRate.value(myOptions);
-		THROTTLE_BASE = myLimit.value(myOptions);
-		TOTAL_SERVERS = myHosts.value(myOptions);
+	private static OptionSet init(String[] anArgs) {
+		OptionSet myOptions = parseOptions(anArgs);
+ 		REQUESTS_PER_SEC = REQUESTS_PER_MINUTE.value(myOptions) / 60;
 
- 		REQUESTS_PER_SEC = REQUESTS_PER_MINUTE / 60;
-
-		BUCKET_TIMES_MILLIS = new int[MAX_CONTRIBUTING_BUCKET + 1];
+		BUCKET_TIMES_MILLIS = new int[MAX_CONTRIBUTING_BUCKET.value(myOptions) + 1];
 		BUCKET_TIMES_MILLIS[0] = 0;
 
 		System.out.print("Bucket ceilings: ");
 
-		for (int i = 0; i < MAX_CONTRIBUTING_BUCKET; i++) {
+		for (int i = 0; i < MAX_CONTRIBUTING_BUCKET.value(myOptions); i++) {
 			BUCKET_TIMES_MILLIS[1 + i] = 100 * (1 + i);
 		}
 
@@ -83,9 +78,9 @@ public class MonteCarloLB {
 		System.out.println();
 		System.out.print("Request distribution: ");
 
-		REQS_PER_BUCKET = new int[MAX_CONTRIBUTING_BUCKET];
+		REQS_PER_BUCKET = new int[MAX_CONTRIBUTING_BUCKET.value(myOptions)];
 
-		for (int i = 0; i < MAX_CONTRIBUTING_BUCKET; i++) {
+		for (int i = 0; i < MAX_CONTRIBUTING_BUCKET.value(myOptions); i++) {
 			int myReqs = (int) (REQUESTS_PER_SEC * BUCKET_SIZE_PERCENTAGES[i] / 100);
 			REQS_PER_BUCKET[i] = (myReqs == 0) ? 1 : myReqs;
 
@@ -94,29 +89,33 @@ public class MonteCarloLB {
 
 		System.out.println();
 		System.out.println();
+
+		return myOptions;
 	}
 
 	public static void main(String[] anArgs) throws Exception {
-		init(anArgs);
+		OptionSet myOptions = init(anArgs);
 
-		System.out.println("Run-time (s): " + RUN_TIME_IN_SECONDS + " @ " + REQUESTS_PER_MINUTE + " rpm (" + REQUESTS_PER_SEC + " rps)");
-		System.out.println("Cores: " + NUM_CORES);
+		System.out.println("Run-time (s): " + RUN_TIME_IN_SECONDS.value(myOptions) + " @ " + 
+			REQUESTS_PER_MINUTE.value(myOptions) + " rpm (" + REQUESTS_PER_SEC + " rps)");
+		System.out.println("Cores: " + NUM_CORES.value(myOptions));
 
-		ThreadPoolExecutor myExecutor = new ThreadPoolExecutor(NUM_CORES, NUM_CORES, 30,
+		ThreadPoolExecutor myExecutor = new ThreadPoolExecutor(NUM_CORES.value(myOptions), NUM_CORES.value(myOptions), 30,
 				TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 
-		int myCurrentThrottle = THROTTLE_BASE;
+		int myCurrentThrottle = THROTTLE_BASE.value(myOptions);
 		
 		while (true) {
 			long myRequestsTotal = 0;
 			long myBreachesTotal = 0;
 			LinkedList<FutureTask<Simulator>> mySims = new LinkedList<>();
 
-			System.out.println("Throttle limit: " + myCurrentThrottle + " per server of which there are: " + TOTAL_SERVERS);
+			System.out.println("Throttle limit: " + myCurrentThrottle + " requests per server of which there are: " + 
+				TOTAL_SERVERS.value(myOptions));
 
-			for (int i = 0; i < SIMS_PER_SETTING; i++) {
+			for (int i = 0; i < SIMS_PER_SETTING.value(myOptions); i++) {
 				FutureTask<Simulator> myTask =
-						new FutureTask<>(new Simulator(myCurrentThrottle, generateDurations()));
+						new FutureTask<>(new Simulator(myCurrentThrottle, generateDurations(myOptions), TOTAL_SERVERS.value(myOptions)));
 				mySims.add(myTask);
 				myExecutor.execute(myTask);
 			}
@@ -144,7 +143,7 @@ public class MonteCarloLB {
 		myExecutor.shutdownNow();
 	}
 
-	private static List<Long> generateDurations() {
+	private static List<Long> generateDurations(OptionSet anOptions) {
 		// Build request stream
 		//
 		List<Long> myRequestDurations = new ArrayList<>();
@@ -153,8 +152,8 @@ public class MonteCarloLB {
 		// Now, for each second, allocate the requests in that second according to the bucket percentages (could do this on a per minute
 		// basis but if we did, a run time of less than a minute is tougher to implement).
 		//
-		for (int i = 0; i < RUN_TIME_IN_SECONDS; i++) {
-			for (int j = 0; j < MAX_CONTRIBUTING_BUCKET; j++) {
+		for (int i = 0; i < RUN_TIME_IN_SECONDS.value(anOptions); i++) {
+			for (int j = 0; j < MAX_CONTRIBUTING_BUCKET.value(anOptions); j++) {
 				int baseTime = BUCKET_TIMES_MILLIS[j];
 				int randomStep = BUCKET_TIMES_MILLIS[j+1] - baseTime;
 
@@ -172,17 +171,19 @@ public class MonteCarloLB {
 	private static class Simulator implements Callable<Simulator> {
 		private final int _throttlePoint;
 		private final List<Long> _requestDurations;
+		private final int _totalServers;
 		private long _requestTotal = 0;
 		private long _breachTotal = 0;
 
-		Simulator(int aThrottlePoint, List<Long> aRequestDurations) {
+		Simulator(int aThrottlePoint, List<Long> aRequestDurations, int aTotalServers) {
 			_throttlePoint = aThrottlePoint;
 			_requestDurations = aRequestDurations;
+			_totalServers = aTotalServers;
 		}
 
 		@Override
 		public Simulator call() throws Exception {
-			LB myBalancer = new LB(TOTAL_SERVERS,
+			LB myBalancer = new LB(_totalServers,
 					new ThrottlePolicy(_throttlePoint, 1000), REQUESTS_PER_SEC);
 
 			myBalancer.allocate(_requestDurations);
