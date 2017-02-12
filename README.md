@@ -6,4 +6,4 @@ To build and run on a Unix:
 
     mvn clean compile
     mvn -Dmdep.outputFile=cp.txt dependency:build-classpath
-    java -classpath java -classpath $(cat cp.txt):target/classes MonteCarloLB -c3 -b20 -r260000 -l40
+    java -classpath $(cat cp.txt):target/classes MonteCarloLB -c3 -b20 -r260000 -l40
