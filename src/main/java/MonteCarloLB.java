@@ -66,34 +66,13 @@ public class MonteCarloLB {
 	}
 
 	public static void main(String[] anArgs) throws Exception {
+		System.out.println("Run-time (s): " + RUN_TIME_IN_SECONDS + " @ " + REQUESTS_PER_MINUTE + " rpm (" + REQUESTS_PER_SEC + " rps)");
+
 		ThreadPoolExecutor myExecutor = new ThreadPoolExecutor(NUM_CORES, NUM_CORES, 30,
 				TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
-		
-		// Build request stream
-		//
-		List<Long> myRequestDurations = new ArrayList<>();
-		Random myRandomizer = new Random();
-
-		// Now, for each second, allocate the requests in that second according to the bucket percentages (could do this on a per minute
-		// basis but if we did, a run time of less than a minute is tougher to implement).
-		//
-		System.out.println("Run-time (s): " + RUN_TIME_IN_SECONDS + " @ " + REQUESTS_PER_MINUTE + " rpm (" + REQUESTS_PER_SEC + " rps)");
-		for (int i = 0; i < RUN_TIME_IN_SECONDS; i++) {
-			for (int j = 0; j < BUCKET_SIZE_PERCENTAGES.length; j++) {
-				int baseTime = BUCKET_TIMES_MILLIS[j];
-				int randomStep = BUCKET_TIMES_MILLIS[j+1] - baseTime;
-
-				for (int k = 0; k < REQS_PER_BUCKET[j]; k++) {
-					long myReqDuration = baseTime + myRandomizer.nextInt(randomStep + 1);
-					myRequestDurations.add(new Long(myReqDuration));
-				}
-			}
-		}
-
-		System.out.println("Run");
 
 		int myCurrentThrottle = THROTTLE_BASE;
-
+		
 		while (true) {
 			long myRequestsTotal = 0;
 			long myBreachesTotal = 0;
@@ -103,7 +82,7 @@ public class MonteCarloLB {
 
 			for (int i = 0; i < SIMS_PER_SETTING; i++) {
 				FutureTask<Simulator> myTask =
-						new FutureTask<>(new Simulator(myCurrentThrottle, new ArrayList<>(myRequestDurations)));
+						new FutureTask<>(new Simulator(myCurrentThrottle, generateDurations()));
 				mySims.add(myTask);
 				myExecutor.execute(myTask);
 			}
@@ -131,6 +110,30 @@ public class MonteCarloLB {
 		myExecutor.shutdownNow();
 	}
 
+	private static List<Long> generateDurations() {
+		// Build request stream
+		//
+		List<Long> myRequestDurations = new ArrayList<>();
+		Random myRandomizer = new Random();
+
+		// Now, for each second, allocate the requests in that second according to the bucket percentages (could do this on a per minute
+		// basis but if we did, a run time of less than a minute is tougher to implement).
+		//
+		for (int i = 0; i < RUN_TIME_IN_SECONDS; i++) {
+			for (int j = 0; j < BUCKET_SIZE_PERCENTAGES.length; j++) {
+				int baseTime = BUCKET_TIMES_MILLIS[j];
+				int randomStep = BUCKET_TIMES_MILLIS[j+1] - baseTime;
+
+				for (int k = 0; k < REQS_PER_BUCKET[j]; k++) {
+					long myReqDuration = baseTime + myRandomizer.nextInt(randomStep + 1);
+					myRequestDurations.add(new Long(myReqDuration));
+				}
+			}
+		}
+
+		return myRequestDurations;		
+	}
+
 	private static class Simulator implements Callable<Simulator> {
 		private final int _throttlePoint;
 		private final List<Long> _requestDurations;
@@ -144,8 +147,6 @@ public class MonteCarloLB {
 
 		@Override
 		public Simulator call() throws Exception {
-			Collections.shuffle(_requestDurations);
-			
 			LB myBalancer = new LB(TOTAL_SERVERS,
 					new ThrottlePolicy(_throttlePoint, 1000), REQUESTS_PER_SEC);
 
