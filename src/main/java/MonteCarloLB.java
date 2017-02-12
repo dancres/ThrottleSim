@@ -69,19 +69,6 @@ public class MonteCarloLB {
 		ThreadPoolExecutor myExecutor = new ThreadPoolExecutor(NUM_CORES, NUM_CORES, 30,
 				TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 		
-		/*
-			To simulate a partner specific load we'd need to generate a random load for them
-			and then a further random background load to run alongside and in sum be the correct
-			number of requests per second to follow the general trend
-
-			We'd need each request to be labelled with a source, partner or general and then each
-			node would need a list of limits per partner it tracks. Implication of this is we need
-			to introduce a throttle class with a designation of source to apply to and what the limit is
-			into node which would then maintain a list of requests against each throttle. This could be
-			effected by offering the request to the throttle which can then decide to track it or not
-			and be part of the cull cycle.
-		 */
-
 		// Build request stream
 		//
 		List<Long> myRequestDurations = new ArrayList<>();
@@ -269,6 +256,19 @@ public class MonteCarloLB {
 		}
 	}
 
+	/*
+		To simulate a customer specific load we'd need to generate a random load for them
+		and then a further random background load to run alongside and in sum be the correct
+		number of requests per second to follow the general trend
+
+		We'd need each request to be labelled with a source, customer or general and then each
+		node would need a list of limits per customer it tracks. Implication of this is we need
+		to introduce a throttle class with a designation of source to apply to and what the limit is
+		into node which would then maintain a list of requests against each throttle. This could be
+		effected by offering the request to the throttle which can then decide to track it or not
+		and be part of the cull cycle.
+	*/
+
 	private static class Node {
 		private final int _id;
 
@@ -276,11 +276,11 @@ public class MonteCarloLB {
 		//
 		private final List<Request> _requests = new LinkedList<>();
 
-		// Requests in scope of the throttles for throttle scope
+		// Requests in scope of the throttles
 		//
 		private final List<Request> _inThrottleScope = new LinkedList<>();
 
-		// Number of throttle breaches we've seen over the run
+		// Throttle breaches we've seen over the run
 		//
 		private final List<Breach> _breaches = new LinkedList<>();
 		private long _totalRequests = 0;
