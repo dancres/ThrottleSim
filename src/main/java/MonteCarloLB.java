@@ -19,7 +19,7 @@ public class MonteCarloLB {
 	//
 	private static final int RUN_TIME_IN_SECONDS = 60;
 
-	private static final int MAX_CONTRIBUTING_BUCKET = 10;
+	private static final int MAX_CONTRIBUTING_BUCKET = 20;
 
 	// Requests per minute
 	//
