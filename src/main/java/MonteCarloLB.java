@@ -19,6 +19,8 @@ public class MonteCarloLB {
 	//
 	private static final int RUN_TIME_IN_SECONDS = 60;
 
+	private static final int MAX_CONTRIBUTING_BUCKET = 10;
+
 	// Requests per minute
 	//
 	private static final int REQUESTS_PER_MINUTE = 180000;
@@ -36,12 +38,12 @@ public class MonteCarloLB {
 	private static final int[] REQS_PER_BUCKET;
 
 	static {
-		BUCKET_TIMES_MILLIS = new int[BUCKET_SIZE_PERCENTAGES.length + 1];
+		BUCKET_TIMES_MILLIS = new int[MAX_CONTRIBUTING_BUCKET + 1];
 		BUCKET_TIMES_MILLIS[0] = 0;
 
 		System.out.print("Bucket ceilings: ");
 
-		for (int i = 0; i < BUCKET_SIZE_PERCENTAGES.length; i++) {
+		for (int i = 0; i < MAX_CONTRIBUTING_BUCKET; i++) {
 			BUCKET_TIMES_MILLIS[1 + i] = 100 * (1 + i);
 		}
 
@@ -52,9 +54,9 @@ public class MonteCarloLB {
 		System.out.println();
 		System.out.print("Request distribution: ");
 
-		REQS_PER_BUCKET = new int[BUCKET_SIZE_PERCENTAGES.length];
+		REQS_PER_BUCKET = new int[MAX_CONTRIBUTING_BUCKET];
 
-		for (int i = 0; i < BUCKET_SIZE_PERCENTAGES.length; i++) {
+		for (int i = 0; i < MAX_CONTRIBUTING_BUCKET; i++) {
 			int myReqs = (int) (REQUESTS_PER_SEC * BUCKET_SIZE_PERCENTAGES[i] / 100);
 			REQS_PER_BUCKET[i] = (myReqs == 0) ? 1 : myReqs;
 
@@ -120,7 +122,7 @@ public class MonteCarloLB {
 		// basis but if we did, a run time of less than a minute is tougher to implement).
 		//
 		for (int i = 0; i < RUN_TIME_IN_SECONDS; i++) {
-			for (int j = 0; j < BUCKET_SIZE_PERCENTAGES.length; j++) {
+			for (int j = 0; j < MAX_CONTRIBUTING_BUCKET; j++) {
 				int baseTime = BUCKET_TIMES_MILLIS[j];
 				int randomStep = BUCKET_TIMES_MILLIS[j+1] - baseTime;
 
