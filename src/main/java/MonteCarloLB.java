@@ -131,6 +131,7 @@ public class MonteCarloLB {
 			}
 		}
 
+		Collections.shuffle(myRequestDurations);
 		return myRequestDurations;		
 	}
 
