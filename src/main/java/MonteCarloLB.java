@@ -44,6 +44,12 @@ public class MonteCarloLB {
 	private static int[] BUCKET_TIMES_MILLIS;
 	private static int[] REQS_PER_BUCKET;
 
+	private OptionSet _options;
+
+	MonteCarloLB(OptionSet aSet) {
+		_options = aSet;
+	}
+
 	private static OptionSet parseOptions(String[] anArgs) {
 		OptionParser myOp = new OptionParser();
 
@@ -94,16 +100,18 @@ public class MonteCarloLB {
 	}
 
 	public static void main(String[] anArgs) throws Exception {
-		OptionSet myOptions = init(anArgs);
+		new MonteCarloLB(init(anArgs)).simulate();
+	}
 
-		System.out.println("Run-time (s): " + RUN_TIME_IN_SECONDS.value(myOptions) + " @ " + 
-			REQUESTS_PER_MINUTE.value(myOptions) + " rpm (" + REQUESTS_PER_SEC + " rps)");
-		System.out.println("Cores: " + NUM_CORES.value(myOptions));
+	private void simulate() throws Exception {
+		System.out.println("Run-time (s): " + RUN_TIME_IN_SECONDS.value(_options) + " @ " + 
+			REQUESTS_PER_MINUTE.value(_options) + " rpm (" + REQUESTS_PER_SEC + " rps)");
+		System.out.println("Cores: " + NUM_CORES.value(_options));
 
-		ThreadPoolExecutor myExecutor = new ThreadPoolExecutor(NUM_CORES.value(myOptions), NUM_CORES.value(myOptions), 30,
+		ThreadPoolExecutor myExecutor = new ThreadPoolExecutor(NUM_CORES.value(_options), NUM_CORES.value(_options), 30,
 				TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 
-		int myCurrentThrottle = THROTTLE_BASE.value(myOptions);
+		int myCurrentThrottle = THROTTLE_BASE.value(_options);
 		
 		while (true) {
 			long myRequestsTotal = 0;
@@ -111,11 +119,11 @@ public class MonteCarloLB {
 			LinkedList<FutureTask<Simulator>> mySims = new LinkedList<>();
 
 			System.out.println("Throttle limit: " + myCurrentThrottle + " requests per server of which there are: " + 
-				TOTAL_SERVERS.value(myOptions));
+				TOTAL_SERVERS.value(_options));
 
-			for (int i = 0; i < SIMS_PER_SETTING.value(myOptions); i++) {
+			for (int i = 0; i < SIMS_PER_SETTING.value(_options); i++) {
 				FutureTask<Simulator> myTask =
-						new FutureTask<>(new Simulator(myCurrentThrottle, generateDurations(myOptions), TOTAL_SERVERS.value(myOptions)));
+						new FutureTask<>(new Simulator(myCurrentThrottle, generateDurations(), TOTAL_SERVERS.value(_options)));
 				mySims.add(myTask);
 				myExecutor.execute(myTask);
 			}
@@ -143,7 +151,7 @@ public class MonteCarloLB {
 		myExecutor.shutdownNow();
 	}
 
-	private static List<Long> generateDurations(OptionSet anOptions) {
+	private List<Long> generateDurations() {
 		// Build request stream
 		//
 		List<Long> myRequestDurations = new ArrayList<>();
@@ -152,8 +160,8 @@ public class MonteCarloLB {
 		// Now, for each second, allocate the requests in that second according to the bucket percentages (could do this on a per minute
 		// basis but if we did, a run time of less than a minute is tougher to implement).
 		//
-		for (int i = 0; i < RUN_TIME_IN_SECONDS.value(anOptions); i++) {
-			for (int j = 0; j < MAX_CONTRIBUTING_BUCKET.value(anOptions); j++) {
+		for (int i = 0; i < RUN_TIME_IN_SECONDS.value(_options); i++) {
+			for (int j = 0; j < MAX_CONTRIBUTING_BUCKET.value(_options); j++) {
 				int baseTime = BUCKET_TIMES_MILLIS[j];
 				int randomStep = BUCKET_TIMES_MILLIS[j+1] - baseTime;
 
