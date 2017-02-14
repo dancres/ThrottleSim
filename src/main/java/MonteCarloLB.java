@@ -201,7 +201,8 @@ public class MonteCarloLB {
 			myBalancer.allocate(_requestDurations);
 
 			for (Node myNode : myBalancer.getNodes()) {
-				long myBreaches = myNode.getBreaches().size();
+				// long myBreaches = myNode.getBreaches().size();
+				long myBreaches = myNode.getBreachCount();
 
 				_requestTotal += myNode.getRequestCount();
 
@@ -329,19 +330,44 @@ public class MonteCarloLB {
 	*/
 
 	private static class Node {
+		private static class RequestExpiryComparator implements Comparator<Request> {
+			public int compare(Request a, Request b) {
+				long test = a.getExpiry() - b.getExpiry();
+				if (test < 0)
+					return -1;
+				else if (test > 0)
+					return 1;
+				else
+					return 0;
+			}
+		}
+
+		private static class StartTimeComparator implements Comparator<Request> {
+			public int compare(Request a, Request b) {
+				long test = a.getStartTime() - b.getStartTime();
+				if (test < 0)
+					return -1;
+				else if (test > 0)
+					return 1;
+				else
+					return 0;
+			}
+		}
+
 		private final int _id;
 
 		// Active requests (which can terminate millisecond by millisecond)
 		//
-		private final List<Request> _requests = new LinkedList<>();
+		private final SortedSet<Request> _requests = new TreeSet<>(new RequestExpiryComparator());
 
 		// Requests in scope of the throttles
 		//
-		private final List<Request> _inThrottleScope = new LinkedList<>();
+		private final SortedSet<Request> _inThrottleScope = new TreeSet<>(new StartTimeComparator());
 
 		// Throttle breaches we've seen over the run
 		//
-		private final List<Breach> _breaches = new LinkedList<>();
+		// private final List<Breach> _breaches = new LinkedList<>();
+		private long _totalBreaches = 0;
 		private long _totalRequests = 0;
 
 		private final ThrottlePolicy _policy;
@@ -356,7 +382,12 @@ public class MonteCarloLB {
 		}
 
 		List<Breach> getBreaches() {
-			return _breaches;
+			// return _breaches;
+			throw new RuntimeException("Not supported");
+		}
+
+		long getBreachCount() {
+			return _totalBreaches;
 		}
 
 		long getRequestCount() {
@@ -378,7 +409,8 @@ public class MonteCarloLB {
 			_inThrottleScope.add(myReq);
 
 			if (_inThrottleScope.size() > _policy.getMax()) {
-				_breaches.add(new Breach(aCurrentTime, _requests.size(), _inThrottleScope.size(), _policy.getMax()));
+				//_breaches.add(new Breach(aCurrentTime, _requests.size(), _inThrottleScope.size(), _policy.getMax()));
+				++_totalBreaches;
 				return true;
 			}
 
@@ -391,8 +423,12 @@ public class MonteCarloLB {
 			while (myRequests.hasNext()) {
 				Request myRequest = myRequests.next();
 
+				// List is oldest to newest so first that hasn't expired means there will be no more
+				//
 				if (myRequest.hasExpired(aCurrentTime))
 					myRequests.remove();
+				else
+					break;
 			}
 
 			myRequests = _inThrottleScope.iterator();
@@ -401,10 +437,12 @@ public class MonteCarloLB {
 				Request myRequest = myRequests.next();
 
 				// If a current time is more than throttle scope ahead of request start-time...
+				// List is oldest to newest so first that hasn't expired means there will be no more
 				//
-				if (aCurrentTime - myRequest.getStartTime() >= _policy.getScopeMillis()) {
+				if (aCurrentTime - myRequest.getStartTime() >= _policy.getScopeMillis())
 					myRequests.remove();
-				}
+				else
+					break;
 			}
 		}
 
@@ -438,6 +476,10 @@ public class MonteCarloLB {
 
 			long getStartTime() {
 				return _startTime;
+			}
+
+			long getExpiry() {
+				return _expiry;
 			}
 
 			boolean hasExpired(long aCurrentTime) {
