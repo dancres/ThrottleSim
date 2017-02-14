@@ -133,12 +133,15 @@ public class MonteCarloLB {
 
 				myRequestsTotal = myRequestsTotal + myResult.getRequestTotal();
 				myBreachesTotal = myBreachesTotal + myResult.getBreachTotal();
-				System.out.print(".");
+				
+				System.out.println("Simulation complete: " + myResult.getRequestTotal() + " rq w/ " + myResult.getBreachTotal() +
+					" throttled across " + myResult.getBreachedNodeTotal() + " nodes");
 			}
 
 			System.out.println();
 			System.out.println("Total Requests: " + myRequestsTotal);
 			System.out.println("Total Breaches: " + myBreachesTotal);
+			System.out.println("Breaches vs Total %: " + ((double) myBreachesTotal / (double) myRequestsTotal) * 100);
 
 			if (myBreachesTotal == 0)
 				break;
@@ -182,6 +185,7 @@ public class MonteCarloLB {
 		private final int _totalServers;
 		private long _requestTotal = 0;
 		private long _breachTotal = 0;
+		private int _breachedNodeCount = 0;
 
 		Simulator(int aThrottlePoint, List<Long> aRequestDurations, int aTotalServers) {
 			_throttlePoint = aThrottlePoint;
@@ -197,8 +201,14 @@ public class MonteCarloLB {
 			myBalancer.allocate(_requestDurations);
 
 			for (Node myNode : myBalancer.getNodes()) {
+				long myBreaches = myNode.getBreaches().size();
+
 				_requestTotal += myNode.getRequestCount();
-				_breachTotal += myNode.getBreaches().size();
+
+				if (myBreaches != 0) {
+					_breachTotal += myBreaches;
+					_breachedNodeCount++;
+				}
 			}
 
 			return this;
@@ -210,6 +220,10 @@ public class MonteCarloLB {
 
 		public long getBreachTotal() {
 			return _breachTotal;
+		}
+
+		public int getBreachedNodeTotal() {
+			return _breachedNodeCount;
 		}
 	}
 
