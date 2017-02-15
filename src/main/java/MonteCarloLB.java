@@ -330,9 +330,19 @@ public class MonteCarloLB {
 	*/
 
 	private static class Node {
-		private static class RequestExpiryComparator implements Comparator<Request> {
+		private static class ValueComparator implements Comparator<Request> {
+			interface Accessor {
+				long getValue(Request aRequest);
+			}
+
+			private final Accessor _accessor;
+
+			ValueComparator(Accessor anAccessor) {
+				_accessor = anAccessor;
+			}
+
 			public int compare(Request a, Request b) {
-				long test = a.getExpiry() - b.getExpiry();
+				long test = _accessor.getValue(a) - _accessor.getValue(b);
 				if (test < 0)
 					return -1;
 				else if (test > 0)
@@ -342,15 +352,15 @@ public class MonteCarloLB {
 			}
 		}
 
-		private static class StartTimeComparator implements Comparator<Request> {
-			public int compare(Request a, Request b) {
-				long test = a.getStartTime() - b.getStartTime();
-				if (test < 0)
-					return -1;
-				else if (test > 0)
-					return 1;
-				else
-					return 0;
+		private static class ExpiryAccessor implements ValueComparator.Accessor {
+			public long getValue(Request aRequest) {
+				return aRequest.getExpiry();
+			}
+		}
+
+		private static class TimeAccessor implements ValueComparator.Accessor {
+			public long getValue(Request aRequest) {
+				return aRequest.getStartTime();
 			}
 		}
 
@@ -358,11 +368,11 @@ public class MonteCarloLB {
 
 		// Active requests (which can terminate millisecond by millisecond)
 		//
-		private final SortedSet<Request> _requests = new TreeSet<>(new RequestExpiryComparator());
+		private final SortedSet<Request> _requests = new TreeSet<>(new ValueComparator(new ExpiryAccessor()));
 
 		// Requests in scope of the throttles
 		//
-		private final SortedSet<Request> _inThrottleScope = new TreeSet<>(new StartTimeComparator());
+		private final SortedSet<Request> _inThrottleScope = new TreeSet<>(new ValueComparator(new TimeAccessor()));
 
 		// Throttle breaches we've seen over the run
 		//
