@@ -110,26 +110,26 @@ public class MonteCarloLB {
 
 		ThreadPoolExecutor myExecutor = new ThreadPoolExecutor(NUM_CORES.value(_options), NUM_CORES.value(_options), 30,
 				TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+		CompletionService<Simulator> myCompletions = new ExecutorCompletionService<>(myExecutor);
 
 		int myCurrentThrottle = THROTTLE_BASE.value(_options);
 		
 		while (true) {
 			long myRequestsTotal = 0;
 			long myBreachesTotal = 0;
-			LinkedList<FutureTask<Simulator>> mySims = new LinkedList<>();
+			LinkedList<Simulator> mySims = new LinkedList<>();
 
 			System.out.println("Throttle limit: " + myCurrentThrottle + " requests per server of which there are: " + 
 				TOTAL_SERVERS.value(_options));
 
 			for (int i = 0; i < SIMS_PER_SETTING.value(_options); i++) {
-				FutureTask<Simulator> myTask =
-						new FutureTask<>(new Simulator(myCurrentThrottle, generateDurations(), TOTAL_SERVERS.value(_options)));
+				Simulator myTask = new Simulator(myCurrentThrottle, generateDurations(), TOTAL_SERVERS.value(_options));
 				mySims.add(myTask);
-				myExecutor.execute(myTask);
+				myCompletions.submit(myTask);
 			}
 
-			for (FutureTask<Simulator> myTask : mySims) {
-				Simulator myResult = myTask.get();
+			for (int i = 0; i < SIMS_PER_SETTING.value(_options); i++) {
+				Simulator myResult = myCompletions.take().get();
 
 				myRequestsTotal = myRequestsTotal + myResult.getRequestTotal();
 				myBreachesTotal = myBreachesTotal + myResult.getBreachTotal();
