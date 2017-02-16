@@ -352,27 +352,25 @@ public class MonteCarloLB {
 			}
 		}
 
-		private static class ExpiryAccessor implements ValueComparator.Accessor {
-			public long getValue(Request aRequest) {
-				return aRequest.getExpiry();
-			}
-		}
-
-		private static class TimeAccessor implements ValueComparator.Accessor {
-			public long getValue(Request aRequest) {
-				return aRequest.getStartTime();
-			}
-		}
-
 		private final int _id;
 
 		// Active requests (which can terminate millisecond by millisecond)
 		//
-		private final SortedSet<Request> _requests = new TreeSet<>(new ValueComparator(new ExpiryAccessor()));
+		private final SortedSet<Request> _requests = 
+			new TreeSet<>(new ValueComparator(new ValueComparator.Accessor() {
+				public long getValue(Request aRequest) {
+					return aRequest.getExpiry();
+				}
+			}));
 
 		// Requests in scope of the throttles
 		//
-		private final SortedSet<Request> _inThrottleScope = new TreeSet<>(new ValueComparator(new TimeAccessor()));
+		private final SortedSet<Request> _inThrottleScope = 
+			new TreeSet<>(new ValueComparator(new ValueComparator.Accessor() {
+				public long getValue(Request aRequest) {
+					return aRequest.getStartTime();
+				}
+			}));
 
 		// Throttle breaches we've seen over the run
 		//
