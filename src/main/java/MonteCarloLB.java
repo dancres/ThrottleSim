@@ -351,20 +351,12 @@ public class MonteCarloLB {
 		// Active requests (which can terminate millisecond by millisecond)
 		//
 		private final SortedSet<Request> _requests = 
-			new TreeSet<>(new ValueComparator(new ValueComparator.Accessor() {
-				public long getValue(Request aRequest) {
-					return aRequest.getExpiry();
-				}
-			}));
+			new TreeSet<>(new ValueComparator(Node.Request::getExpiry));
 
 		// Requests in scope of the throttles
 		//
 		private final SortedSet<Request> _inThrottleScope = 
-			new TreeSet<>(new ValueComparator(new ValueComparator.Accessor() {
-				public long getValue(Request aRequest) {
-					return aRequest.getStartTime();
-				}
-			}));
+			new TreeSet<>(new ValueComparator(Node.Request::getStartTime));
 
 		// Throttle breaches we've seen over the run
 		//
