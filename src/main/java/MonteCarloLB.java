@@ -201,7 +201,6 @@ public class MonteCarloLB {
 			myBalancer.allocate(_requestDurations);
 
 			for (Node myNode : myBalancer.getNodes()) {
-				// long myBreaches = myNode.getBreaches().size();
 				long myBreaches = myNode.getBreachCount();
 
 				_requestTotal += myNode.getRequestCount();
@@ -258,7 +257,7 @@ public class MonteCarloLB {
 
 		LB(int aNumNodes, ThrottlePolicy aPolicy, int aReqsPerSec, boolean isDebug) {
 			for (int i = 0; i < aNumNodes; i++)
-				_nodes.add(new Node(i, aPolicy));
+				_nodes.add(new Node(i, aPolicy, isDebug));
 
 			_reqsPerSec = aReqsPerSec;
 			_reqsPerMillis = _reqsPerSec / 1000;
@@ -358,17 +357,20 @@ public class MonteCarloLB {
 		private final SortedSet<Request> _inThrottleScope = 
 			new TreeSet<>(new ValueComparator(Node.Request::getStartTime));
 
-		// Throttle breaches we've seen over the run
-		//
-		// private final List<Breach> _breaches = new LinkedList<>();
 		private long _totalBreaches = 0;
 		private long _totalRequests = 0;
 
 		private final ThrottlePolicy _policy;
+		private final boolean _recordBreaches;
 
-		Node(int anId, ThrottlePolicy aPolicy) {
+		// Throttle breaches we've seen over the run
+		//
+		private final List<Breach> _breaches = new LinkedList<>();
+
+		Node(int anId, ThrottlePolicy aPolicy, boolean shouldRecordBreaches) {
 			_id = anId;
 			_policy = aPolicy;
+			_recordBreaches = shouldRecordBreaches;
 		}
 
 		int getId() {
@@ -376,8 +378,7 @@ public class MonteCarloLB {
 		}
 
 		List<Breach> getBreaches() {
-			// return _breaches;
-			throw new RuntimeException("Not supported");
+			return _breaches;
 		}
 
 		long getBreachCount() {
@@ -402,7 +403,9 @@ public class MonteCarloLB {
 			_inThrottleScope.add(myReq);
 
 			if (_inThrottleScope.size() > _policy.getMax()) {
-				//_breaches.add(new Breach(aCurrentTime, _requests.size(), _inThrottleScope.size(), _policy.getMax()));
+				if (_recordBreaches)
+					_breaches.add(new Breach(aCurrentTime, _requests.size(), _inThrottleScope.size(), _policy.getMax()));
+
 				++_totalBreaches;
 				return true;
 			}
