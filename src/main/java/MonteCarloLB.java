@@ -404,7 +404,6 @@ public class MonteCarloLB {
 
 		boolean incomingRequest(long aRequestDuration, long aCurrentTime) {
 			++_totalRequests;
-			cull(aCurrentTime);
 
 			Request myReq = new Request(aRequestDuration, aCurrentTime);
 			_requests.add(myReq);
