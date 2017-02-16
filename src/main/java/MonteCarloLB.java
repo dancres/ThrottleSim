@@ -157,7 +157,7 @@ public class MonteCarloLB {
 	private List<Long> generateDurations() {
 		// Build request stream
 		//
-		List<Long> myRequestDurations = new ArrayList<>();
+		List<Long> myRequestDurations = new ArrayList<>(REQUESTS_PER_SEC * RUN_TIME_IN_SECONDS.value(_options));
 		Random myRandomizer = new Random();
 
 		// Now, for each second, allocate the requests in that second according to the bucket percentages (could do this on a per minute
@@ -301,18 +301,12 @@ public class MonteCarloLB {
 		}
 
 		Node findTargetNode(long aCurrentTime) {
-			int myMinConnections = Integer.MAX_VALUE;
-			Node myFavouredNode = null;
+			SortedMap<Integer, Node> myNodes = new TreeMap<>();
 
-			// Allocate to nodes based on least connections
-			//
 			for (Node myNode : _nodes)
-				if (myNode.currentConnections(aCurrentTime) < myMinConnections) {
-					myFavouredNode = myNode;
-					myMinConnections = myNode.currentConnections(aCurrentTime);
-				}
+				myNodes.put(myNode.currentConnections(aCurrentTime), myNode);
 
-			return myFavouredNode;
+			return myNodes.get(myNodes.firstKey());
 		}
 	}
 
