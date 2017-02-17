@@ -33,6 +33,10 @@ public class MonteCarloLB {
 	private static OptionSpec<Integer> REQUESTS_PER_MINUTE;
 	private static int REQUESTS_PER_SEC;
 
+	// Debug mode
+	//
+	private static OptionSpec<Boolean> DEBUG_MODE;
+
 	// The initial setting for the per machine throttle
 	//
 	private static OptionSpec<Integer> THROTTLE_BASE;
@@ -60,6 +64,7 @@ public class MonteCarloLB {
 		REQUESTS_PER_MINUTE = myOp.accepts("r").withOptionalArg().ofType(Integer.class).defaultsTo(160000);
 		THROTTLE_BASE = myOp.accepts("l").withOptionalArg().ofType(Integer.class).defaultsTo(25);
 		TOTAL_SERVERS = myOp.accepts("h").withOptionalArg().ofType(Integer.class).defaultsTo(200);
+		DEBUG_MODE = myOp.accepts("d").withOptionalArg().ofType(Boolean.class).defaultsTo(false);
 
 		return myOp.parse(anArgs);
 	}
@@ -123,7 +128,8 @@ public class MonteCarloLB {
 				TOTAL_SERVERS.value(_options));
 
 			for (int i = 0; i < SIMS_PER_SETTING.value(_options); i++) {
-				Simulator myTask = new Simulator(myCurrentThrottle, generateDurations(), TOTAL_SERVERS.value(_options));
+				Simulator myTask = new Simulator(myCurrentThrottle, generateDurations(), 
+					TOTAL_SERVERS.value(_options), DEBUG_MODE.value(_options));
 				mySims.add(myTask);
 				myCompletions.submit(myTask);
 			}
@@ -136,6 +142,11 @@ public class MonteCarloLB {
 				
 				System.out.println("Simulation complete: " + myResult.getRequestTotal() + " rq w/ " + myResult.getBreachTotal() +
 					" throttled across " + myResult.getBreachedNodeTotal() + " nodes");
+
+				if (DEBUG_MODE.value(_options)) {
+					for (Node.Breach myBreach : myResult.getBreachDetail())
+						System.out.println(myBreach);
+				}
 			}
 
 			System.out.println();
@@ -183,20 +194,24 @@ public class MonteCarloLB {
 		private final int _throttlePoint;
 		private final List<Long> _requestDurations;
 		private final int _totalServers;
+		private final boolean _debug;
+
 		private long _requestTotal = 0;
 		private long _breachTotal = 0;
 		private int _breachedNodeCount = 0;
+		private List<Node.Breach> _breachDetail = new ArrayList<>();
 
-		Simulator(int aThrottlePoint, List<Long> aRequestDurations, int aTotalServers) {
+		Simulator(int aThrottlePoint, List<Long> aRequestDurations, int aTotalServers, boolean isDebug) {
 			_throttlePoint = aThrottlePoint;
 			_requestDurations = aRequestDurations;
 			_totalServers = aTotalServers;
+			_debug = isDebug;
 		}
 
 		@Override
 		public Simulator call() throws Exception {
 			LB myBalancer = new LB(_totalServers,
-					new ThrottlePolicy(_throttlePoint, 1000), REQUESTS_PER_SEC);
+					new ThrottlePolicy(_throttlePoint, 1000), REQUESTS_PER_SEC, _debug);
 
 			myBalancer.allocate(_requestDurations);
 
@@ -211,9 +226,19 @@ public class MonteCarloLB {
 				}
 			}
 
+			if (_debug) {
+				for (Node myNode : myBalancer.getNodes()) {
+					_breachDetail.addAll(myNode.getBreaches());
+				}
+			}
+
 			return this;
 		}
 
+		public List<Node.Breach> getBreachDetail() {
+			return _breachDetail;
+		}
+		
 		public long getRequestTotal() {
 			return _requestTotal;
 		}
