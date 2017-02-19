@@ -144,8 +144,14 @@ public class MonteCarloLB {
 					" throttled across " + myResult.getBreachedNodeTotal() + " nodes");
 
 				if (DEBUG_MODE.value(_options)) {
-					for (Node.Breach myBreach : myResult.getBreachDetail())
-						System.out.println(myBreach);
+					myResult.getBreachDetail().forEach((id, breaches) -> {
+						System.out.println("Node Id: " + id);
+						
+						for (Node.Breach myBreach : breaches)
+							System.out.print(myBreach);
+
+						System.out.println();
+					});
 				}
 			}
 
@@ -199,7 +205,7 @@ public class MonteCarloLB {
 		private long _requestTotal = 0;
 		private long _breachTotal = 0;
 		private int _breachedNodeCount = 0;
-		private List<Node.Breach> _breachDetail = new ArrayList<>();
+		private Map<Integer, List<Node.Breach>> _breachDetail = new HashMap<>();
 
 		Simulator(int aThrottlePoint, List<Long> aRequestDurations, int aTotalServers, boolean isDebug) {
 			_throttlePoint = aThrottlePoint;
@@ -228,14 +234,14 @@ public class MonteCarloLB {
 
 			if (_debug) {
 				for (Node myNode : myBalancer.getNodes()) {
-					_breachDetail.addAll(myNode.getBreaches());
+					_breachDetail.put(myNode.getId(), myNode.getBreaches());
 				}
 			}
 
 			return this;
 		}
 
-		public List<Node.Breach> getBreachDetail() {
+		public Map<Integer, List<Node.Breach>> getBreachDetail() {
 			return _breachDetail;
 		}
 		
