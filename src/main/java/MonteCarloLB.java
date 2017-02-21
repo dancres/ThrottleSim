@@ -92,7 +92,7 @@ public class MonteCarloLB {
 		REQS_PER_BUCKET = new int[MAX_CONTRIBUTING_BUCKET.value(myOptions)];
 
 		for (int i = 0; i < MAX_CONTRIBUTING_BUCKET.value(myOptions); i++) {
-			int myReqs = (int) (REQUESTS_PER_SEC * BUCKET_SIZE_PERCENTAGES[i] / 100);
+			int myReqs = (int) (RUN_TIME_IN_SECONDS.value(myOptions) * REQUESTS_PER_SEC * BUCKET_SIZE_PERCENTAGES[i] / 100);
 			REQS_PER_BUCKET[i] = (myReqs == 0) ? 1 : myReqs;
 
 			System.out.print("(" + i + ") " + REQS_PER_BUCKET[i] + " requests ");
@@ -184,7 +184,7 @@ public class MonteCarloLB {
 			int baseTime = BUCKET_TIMES_MILLIS[j];
 			int randomStep = BUCKET_TIMES_MILLIS[j+1] - baseTime;
 
-			for (int k = 0; k < REQS_PER_BUCKET[j] * RUN_TIME_IN_SECONDS.value(_options); k++) {
+			for (int k = 0; k < REQS_PER_BUCKET[j]; k++) {
 				long myReqDuration = baseTime + myRandomizer.nextInt(randomStep + 1);
 				myRequestDurations.add(new Long(myReqDuration));
 			}
