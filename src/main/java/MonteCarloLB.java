@@ -180,15 +180,13 @@ public class MonteCarloLB {
 		// Now, for each second, allocate the requests in that second according to the bucket percentages (could do this on a per minute
 		// basis but if we did, a run time of less than a minute is tougher to implement).
 		//
-		for (int i = 0; i < RUN_TIME_IN_SECONDS.value(_options); i++) {
-			for (int j = 0; j < MAX_CONTRIBUTING_BUCKET.value(_options); j++) {
-				int baseTime = BUCKET_TIMES_MILLIS[j];
-				int randomStep = BUCKET_TIMES_MILLIS[j+1] - baseTime;
+		for (int j = 0; j < MAX_CONTRIBUTING_BUCKET.value(_options); j++) {
+			int baseTime = BUCKET_TIMES_MILLIS[j];
+			int randomStep = BUCKET_TIMES_MILLIS[j+1] - baseTime;
 
-				for (int k = 0; k < REQS_PER_BUCKET[j]; k++) {
-					long myReqDuration = baseTime + myRandomizer.nextInt(randomStep + 1);
-					myRequestDurations.add(new Long(myReqDuration));
-				}
+			for (int k = 0; k < REQS_PER_BUCKET[j] * RUN_TIME_IN_SECONDS.value(_options); k++) {
+				long myReqDuration = baseTime + myRandomizer.nextInt(randomStep + 1);
+				myRequestDurations.add(new Long(myReqDuration));
 			}
 		}
 
