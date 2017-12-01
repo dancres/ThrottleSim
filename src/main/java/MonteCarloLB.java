@@ -217,7 +217,6 @@ public class MonteCarloLB {
 
 	private class Simulator implements Callable<Simulator> {
 		private final int _throttlePoint;
-		private final List<Integer> _requestDurations;
 		private final int _totalServers;
 		private final int _reqsPerSec;
 		private final boolean _debug;
@@ -230,7 +229,6 @@ public class MonteCarloLB {
 		Simulator(int aThrottlePoint, int aReqsPerSec, int aTotalServers, boolean isDebug) {
 			_throttlePoint = aThrottlePoint;
 			_reqsPerSec = aReqsPerSec;
-			_requestDurations = generateDurations();
 			_totalServers = aTotalServers;
 			_debug = isDebug;
 		}
@@ -240,7 +238,7 @@ public class MonteCarloLB {
 			LB myBalancer = new LB(_totalServers,
 					new ThrottlePolicy(_throttlePoint, 1000), _reqsPerSec, _debug);
 
-			myBalancer.allocate(_requestDurations);
+			myBalancer.allocate(generateDurations());
 
 			for (Node myNode : myBalancer.getNodes()) {
 				long myBreaches = myNode.getBreachCount();
