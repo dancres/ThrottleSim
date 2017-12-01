@@ -65,7 +65,7 @@ public class MonteCarloLB {
 		}
 	}
 
-	MonteCarloLB(String[] anArgs) {
+	private MonteCarloLB(String[] anArgs) {
 		Configuration myConfig = new Configuration();
 		OptionSet myOptions = myConfig.produce(anArgs);
 
@@ -131,7 +131,7 @@ public class MonteCarloLB {
 		System.out.println("Cores: " + NUM_CORES);
 
 		ThreadPoolExecutor myExecutor = new ThreadPoolExecutor(NUM_CORES, NUM_CORES, 30,
-				TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+				TimeUnit.SECONDS, new LinkedBlockingQueue<>());
 		CompletionService<Simulator> myCompletions = new ExecutorCompletionService<>(myExecutor);
 
 		int myCurrentThrottle = THROTTLE_BASE;
@@ -139,7 +139,6 @@ public class MonteCarloLB {
 		while (true) {
 			long myRequestsTotal = 0;
 			long myBreachesTotal = 0;
-			LinkedList<Simulator> mySims = new LinkedList<>();
 
 			System.out.println("Throttle limit: " + myCurrentThrottle + " requests per server of which there are: " +
 					TOTAL_NODES);
@@ -147,7 +146,6 @@ public class MonteCarloLB {
 			for (int i = 0; i < SIMS_PER_SETTING; i++) {
 				Simulator myTask = new Simulator(myCurrentThrottle, REQUESTS_PER_SEC, generateDurations(),
 						TOTAL_NODES, DEBUG_MODE);
-				mySims.add(myTask);
 				myCompletions.submit(myTask);
 			}
 
@@ -203,7 +201,7 @@ public class MonteCarloLB {
 
 			for (int k = 0; k < REQS_PER_BUCKET[j]; k++) {
 				long myReqDuration = baseTime + myRandomizer.nextInt(randomStep + 1);
-				myRequestDurations.add(new Long(myReqDuration));
+				myRequestDurations.add(myReqDuration);
 			}
 		}
 
@@ -258,21 +256,13 @@ public class MonteCarloLB {
 			return this;
 		}
 
-		public Map<Integer, List<Node.Breach>> getBreachDetail() {
-			return _breachDetail;
-		}
+		Map<Integer, List<Node.Breach>> getBreachDetail() { return _breachDetail; }
 		
-		public long getRequestTotal() {
-			return _requestTotal;
-		}
+		long getRequestTotal() { return _requestTotal; }
 
-		public long getBreachTotal() {
-			return _breachTotal;
-		}
+		long getBreachTotal() { return _breachTotal; }
 
-		public int getBreachedNodeTotal() {
-			return _breachedNodeCount;
-		}
+		int getBreachedNodeTotal() { return _breachedNodeCount; }
 	}
 
 	private static class ThrottlePolicy {
@@ -298,10 +288,6 @@ public class MonteCarloLB {
 		private final int _reqsPerSec;
 		private final double _reqsPerMillis;
 		private final boolean _debug;
-
-		LB(int aNumNodes, ThrottlePolicy aPolicy, int aReqsPerSec) {
-			this(aNumNodes, aPolicy, aReqsPerSec, false);
-		}
 
 		LB(int aNumNodes, ThrottlePolicy aPolicy, int aReqsPerSec, boolean isDebug) {
 			for (int i = 0; i < aNumNodes; i++)
