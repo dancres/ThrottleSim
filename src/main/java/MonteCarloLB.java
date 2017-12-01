@@ -81,14 +81,7 @@ public class MonteCarloLB {
 
 		BUCKET_TIMES_MILLIS = computeBucketCeilingTimes();
 
-		System.out.println();
-		System.out.println();
-		System.out.print("Request distribution: ");
-
 		REQS_PER_BUCKET = computeRequestsPerBucket();
-
-		System.out.println();
-		System.out.println();
 	}
 
 	private int[] computeBucketCeilingTimes() {
@@ -104,10 +97,15 @@ public class MonteCarloLB {
 		for (int i = 1; i < myBucketTimeCeilings.length; i++)
 			System.out.print(myBucketTimeCeilings[i] + " ms ");
 
+		System.out.println();
+		System.out.println();
+
 		return myBucketTimeCeilings;
 	}
 
 	private int[] computeRequestsPerBucket() {
+		System.out.print("Request distribution: ");
+
 		int[] myReqsPerBucket = new int[MAX_CONTRIBUTING_BUCKET];
 
 		for (int i = 0; i < MAX_CONTRIBUTING_BUCKET; i++) {
@@ -117,6 +115,9 @@ public class MonteCarloLB {
 			System.out.print("(" + i + ") " + myReqsPerBucket[i] + " requests ");
 		}
 
+		System.out.println();
+		System.out.println();
+		
 		return myReqsPerBucket;
 	}
 
