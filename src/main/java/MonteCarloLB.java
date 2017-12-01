@@ -42,6 +42,10 @@ public class MonteCarloLB {
 	//
 	private final Integer THROTTLE_BASE;
 
+	// The increment post-breach, to apply to throttle for each round of simulations
+	//
+	private final Integer THROTTLE_INCR;
+
 	// Number of machines in the cluster
 	//
 	private final Integer TOTAL_NODES;
@@ -58,6 +62,7 @@ public class MonteCarloLB {
 		final OptionSpec<Integer> _maxContributingBucket = myOp.accepts("b").withOptionalArg().ofType(Integer.class).defaultsTo(BUCKET_SIZE_PERCENTAGES.length);
 		final OptionSpec<Integer> _requestsPerMinParam = myOp.accepts("r").withOptionalArg().ofType(Integer.class).defaultsTo(160000);
 		final OptionSpec<Integer> _throttleBaseParam = myOp.accepts("l").withOptionalArg().ofType(Integer.class).defaultsTo(25);
+		final OptionSpec<Integer> _throttleIncrParam = myOp.accepts("i").withOptionalArg().ofType(Integer.class).defaultsTo(5);
 		final OptionSpec<Integer> _totalNodesParam = myOp.accepts("h").withOptionalArg().ofType(Integer.class).defaultsTo(200);
 		final OptionSpec<Boolean> _debugModeParam = myOp.accepts("d").withOptionalArg().ofType(Boolean.class).defaultsTo(false);
 
@@ -77,6 +82,7 @@ public class MonteCarloLB {
 		REQUESTS_PER_MINUTE = myConfig._requestsPerMinParam.value(myOptions);
 		REQUESTS_PER_SEC = REQUESTS_PER_MINUTE / 60;
 		THROTTLE_BASE = myConfig._throttleBaseParam.value(myOptions);
+		THROTTLE_INCR = myConfig._throttleIncrParam.value(myOptions);
 		TOTAL_NODES = myConfig._totalNodesParam.value(myOptions);
 		DEBUG_MODE = myConfig._debugModeParam.value(myOptions);
 
@@ -178,7 +184,7 @@ public class MonteCarloLB {
 			if (myBreachesTotal == 0)
 				break;
 			else {
-				myCurrentThrottle += 5;
+				myCurrentThrottle += THROTTLE_INCR;
 				System.out.println();
 			}
 		}
