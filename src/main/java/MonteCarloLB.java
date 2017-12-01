@@ -3,6 +3,7 @@ import java.util.concurrent.*;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.apache.commons.math3.random.Well44497b;
 
 public class MonteCarloLB {
 	// Percentage of requests that fall in 100ms ranges starting at 0-100ms (long-tailed distribution so trimmed & not summing to 100%)
@@ -190,7 +191,7 @@ public class MonteCarloLB {
 		// Build request stream
 		//
 		List<Long> myRequestDurations = new ArrayList<>(REQUESTS_PER_SEC * RUN_TIME_IN_SECONDS);
-		Random myRandomizer = new Random();
+		Well44497b myRandomizer = new Well44497b();
 
 		// Now, for each second, allocate the requests in that second according to the bucket percentages (could do this on a per minute
 		// basis but if we did, a run time of less than a minute is tougher to implement).
