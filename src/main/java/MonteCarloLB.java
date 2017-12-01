@@ -145,8 +145,7 @@ public class MonteCarloLB {
 					TOTAL_NODES);
 
 			for (int i = 0; i < SIMS_PER_SETTING; i++) {
-				Simulator myTask = new Simulator(myCurrentThrottle, REQUESTS_PER_SEC, generateDurations(),
-						TOTAL_NODES, DEBUG_MODE);
+				Simulator myTask = new Simulator(myCurrentThrottle, REQUESTS_PER_SEC, TOTAL_NODES, DEBUG_MODE);
 				myCompletions.submit(myTask);
 			}
 
@@ -187,10 +186,10 @@ public class MonteCarloLB {
 		myExecutor.shutdownNow();
 	}
 
-	private List<Long> generateDurations() {
+	private List<Integer> generateDurations() {
 		// Build request stream
 		//
-		List<Long> myRequestDurations = new ArrayList<>(REQUESTS_PER_SEC * RUN_TIME_IN_SECONDS);
+		List<Integer> myRequestDurations = new ArrayList<>(REQUESTS_PER_SEC * RUN_TIME_IN_SECONDS);
 		Well44497b myRandomizer = new Well44497b();
 
 		// Now, for each second, allocate the requests in that second according to the bucket percentages (could do this on a per minute
@@ -201,7 +200,7 @@ public class MonteCarloLB {
 			int randomStep = BUCKET_TIMES_MILLIS[j+1] - baseTime;
 
 			for (int k = 0; k < REQS_PER_BUCKET[j]; k++) {
-				long myReqDuration = baseTime + myRandomizer.nextInt(randomStep + 1);
+				int myReqDuration = baseTime + myRandomizer.nextInt(randomStep + 1);
 				myRequestDurations.add(myReqDuration);
 			}
 		}
@@ -210,9 +209,9 @@ public class MonteCarloLB {
 		return myRequestDurations;		
 	}
 
-	private static class Simulator implements Callable<Simulator> {
+	private class Simulator implements Callable<Simulator> {
 		private final int _throttlePoint;
-		private final List<Long> _requestDurations;
+		private final List<Integer> _requestDurations;
 		private final int _totalServers;
 		private final int _reqsPerSec;
 		private final boolean _debug;
@@ -222,10 +221,10 @@ public class MonteCarloLB {
 		private int _breachedNodeCount = 0;
 		private Map<Integer, List<Node.Breach>> _breachDetail = new HashMap<>();
 
-		Simulator(int aThrottlePoint, int aReqsPerSec, List<Long> aRequestDurations, int aTotalServers, boolean isDebug) {
+		Simulator(int aThrottlePoint, int aReqsPerSec, int aTotalServers, boolean isDebug) {
 			_throttlePoint = aThrottlePoint;
 			_reqsPerSec = aReqsPerSec;
-			_requestDurations = aRequestDurations;
+			_requestDurations = generateDurations();
 			_totalServers = aTotalServers;
 			_debug = isDebug;
 		}
@@ -299,13 +298,13 @@ public class MonteCarloLB {
 			_debug = isDebug;
 		}
 
-		void allocate(List<Long> aRequestDurations) {
+		void allocate(List<Integer> aRequestDurations) {
 			long myCurrentTick = 0; // In seconds
 			int myReqCount = 0;
 
 			// Scatter the requests evenly across the seconds of runtime millisecond by millisecond
 			//
-			for (Long myDuration : aRequestDurations) {
+			for (Integer myDuration : aRequestDurations) {
 
 				// Current time is a second + the request index for that second / the reqs per milli - allocate a request down to milliseconds
 				//
@@ -430,7 +429,7 @@ public class MonteCarloLB {
 			return _requests.size();
 		}
 
-		boolean incomingRequest(long aRequestDuration, long aCurrentTime) {
+		boolean incomingRequest(int aRequestDuration, long aCurrentTime) {
 			++_totalRequests;
 
 			Request myReq = new Request(aRequestDuration, aCurrentTime);
@@ -500,7 +499,7 @@ public class MonteCarloLB {
 			private final long _expiry;
 			private final long _startTime;
 
-			Request(long aRequestDuration, long aCurrentTime) {
+			Request(int aRequestDuration, long aCurrentTime) {
 				_expiry = aRequestDuration + aCurrentTime;
 				_startTime = aCurrentTime;
 			}
