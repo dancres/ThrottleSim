@@ -43,7 +43,7 @@ public class MonteCarloLB {
 
 	// Number of machines in the cluster
 	//
-	private final Integer TOTAL_SERVERS;
+	private final Integer TOTAL_NODES;
 
 	private final int[] BUCKET_TIMES_MILLIS;
 	private final int[] REQS_PER_BUCKET;
@@ -76,7 +76,7 @@ public class MonteCarloLB {
 		REQUESTS_PER_MINUTE = myConfig._requestsPerMinParam.value(myOptions);
 		REQUESTS_PER_SEC = REQUESTS_PER_MINUTE / 60;
 		THROTTLE_BASE = myConfig._throttleBaseParam.value(myOptions);
-		TOTAL_SERVERS = myConfig._totalNodesParam.value(myOptions);
+		TOTAL_NODES = myConfig._totalNodesParam.value(myOptions);
 		DEBUG_MODE = myConfig._debugModeParam.value(myOptions);
 
 		BUCKET_TIMES_MILLIS = computeBucketCeilingTimes();
@@ -141,12 +141,12 @@ public class MonteCarloLB {
 			long myBreachesTotal = 0;
 			LinkedList<Simulator> mySims = new LinkedList<>();
 
-			System.out.println("Throttle limit: " + myCurrentThrottle + " requests per server of which there are: " + 
-				TOTAL_SERVERS);
+			System.out.println("Throttle limit: " + myCurrentThrottle + " requests per server of which there are: " +
+					TOTAL_NODES);
 
 			for (int i = 0; i < SIMS_PER_SETTING; i++) {
 				Simulator myTask = new Simulator(myCurrentThrottle, REQUESTS_PER_SEC, generateDurations(),
-					TOTAL_SERVERS, DEBUG_MODE);
+						TOTAL_NODES, DEBUG_MODE);
 				mySims.add(myTask);
 				myCompletions.submit(myTask);
 			}
