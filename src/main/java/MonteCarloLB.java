@@ -48,13 +48,14 @@ public class MonteCarloLB {
 	private static int[] BUCKET_TIMES_MILLIS;
 	private static int[] REQS_PER_BUCKET;
 
-	private OptionSet _options;
+	private final OptionSet _options;
 
-	MonteCarloLB(OptionSet aSet) {
-		_options = aSet;
+	MonteCarloLB(String[] anArgs) {
+		_options = parseOptions(anArgs);
+		init(_options);
 	}
 
-	private static OptionSet parseOptions(String[] anArgs) {
+	private OptionSet parseOptions(String[] anArgs) {
 		OptionParser myOp = new OptionParser();
 
 		NUM_CORES = myOp.accepts("c").withOptionalArg().ofType(Integer.class).defaultsTo(2);
@@ -69,43 +70,52 @@ public class MonteCarloLB {
 		return myOp.parse(anArgs);
 	}
 
-	private static OptionSet init(String[] anArgs) {
-		OptionSet myOptions = parseOptions(anArgs);
- 		REQUESTS_PER_SEC = REQUESTS_PER_MINUTE.value(myOptions) / 60;
+	private void init(OptionSet anOptions) {
+ 		REQUESTS_PER_SEC = REQUESTS_PER_MINUTE.value(anOptions) / 60;
 
-		BUCKET_TIMES_MILLIS = new int[MAX_CONTRIBUTING_BUCKET.value(myOptions) + 1];
-		BUCKET_TIMES_MILLIS[0] = 0;
-
-		System.out.print("Bucket ceilings: ");
-
-		for (int i = 0; i < MAX_CONTRIBUTING_BUCKET.value(myOptions); i++) {
-			BUCKET_TIMES_MILLIS[1 + i] = 100 * (1 + i);
-		}
-
-		for (int i = 1; i < BUCKET_TIMES_MILLIS.length; i++)
-			System.out.print(BUCKET_TIMES_MILLIS[i] + " ms ");
+		BUCKET_TIMES_MILLIS = computeBucketCeilingTimes(anOptions);
 
 		System.out.println();
 		System.out.println();
 		System.out.print("Request distribution: ");
 
-		REQS_PER_BUCKET = new int[MAX_CONTRIBUTING_BUCKET.value(myOptions)];
+		REQS_PER_BUCKET = computeRequestsPerBucket(anOptions);
 
-		for (int i = 0; i < MAX_CONTRIBUTING_BUCKET.value(myOptions); i++) {
-			int myReqs = (int) (RUN_TIME_IN_SECONDS.value(myOptions) * REQUESTS_PER_SEC * BUCKET_SIZE_PERCENTAGES[i] / 100);
-			REQS_PER_BUCKET[i] = (myReqs == 0) ? 1 : myReqs;
+		System.out.println();
+		System.out.println();
+	}
 
-			System.out.print("(" + i + ") " + REQS_PER_BUCKET[i] + " requests ");
+	private int[] computeBucketCeilingTimes(OptionSet anOptions) {
+		int[] myBucketTimeCeilings = new int[MAX_CONTRIBUTING_BUCKET.value(anOptions) + 1];
+		myBucketTimeCeilings[0] = 0;
+
+		System.out.print("Bucket ceilings: ");
+
+		for (int i = 0; i < MAX_CONTRIBUTING_BUCKET.value(anOptions); i++) {
+			myBucketTimeCeilings[1 + i] = 100 * (1 + i);
 		}
 
-		System.out.println();
-		System.out.println();
+		for (int i = 1; i < myBucketTimeCeilings.length; i++)
+			System.out.print(myBucketTimeCeilings[i] + " ms ");
 
-		return myOptions;
+		return myBucketTimeCeilings;
+	}
+
+	private int[] computeRequestsPerBucket(OptionSet anOptions) {
+		int[] myReqsPerBucket = new int[MAX_CONTRIBUTING_BUCKET.value(anOptions)];
+
+		for (int i = 0; i < MAX_CONTRIBUTING_BUCKET.value(anOptions); i++) {
+			int myReqs = (int) (RUN_TIME_IN_SECONDS.value(anOptions) * REQUESTS_PER_SEC * BUCKET_SIZE_PERCENTAGES[i] / 100);
+			myReqsPerBucket[i] = (myReqs == 0) ? 1 : myReqs;
+
+			System.out.print("(" + i + ") " + myReqsPerBucket[i] + " requests ");
+		}
+
+		return myReqsPerBucket;
 	}
 
 	public static void main(String[] anArgs) throws Exception {
-		new MonteCarloLB(init(anArgs)).simulate();
+		new MonteCarloLB(anArgs).simulate();
 	}
 
 	private void simulate() throws Exception {
