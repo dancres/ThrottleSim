@@ -48,38 +48,44 @@ public class MonteCarloLB {
 	private static int[] BUCKET_TIMES_MILLIS;
 	private static int[] REQS_PER_BUCKET;
 
+	private static class Configuration {
+		private final OptionParser myOp = new OptionParser();
+
+		final OptionSpec<Integer> _numCoresParam = myOp.accepts("c").withOptionalArg().ofType(Integer.class).defaultsTo(2);
+		final OptionSpec<Integer> _simsPerSettingParam = myOp.accepts("s").withOptionalArg().ofType(Integer.class).defaultsTo(12);
+		final OptionSpec<Integer> _runTimeInSecondsParam = myOp.accepts("t").withOptionalArg().ofType(Integer.class).defaultsTo(60);
+		final OptionSpec<Integer> _maxContributingBucket = myOp.accepts("b").withOptionalArg().ofType(Integer.class).defaultsTo(BUCKET_SIZE_PERCENTAGES.length);
+		final OptionSpec<Integer> _requestsPerMinParam = myOp.accepts("r").withOptionalArg().ofType(Integer.class).defaultsTo(160000);
+		final OptionSpec<Integer> _throttleBaseParam = myOp.accepts("l").withOptionalArg().ofType(Integer.class).defaultsTo(25);
+		final OptionSpec<Integer> _totalNodesParam = myOp.accepts("h").withOptionalArg().ofType(Integer.class).defaultsTo(200);
+		final OptionSpec<Boolean> _debugModeParam = myOp.accepts("d").withOptionalArg().ofType(Boolean.class).defaultsTo(false);
+
+		OptionSet produce(String[] anArgs) {
+			return myOp.parse(anArgs);
+		}
+	}
+
 	MonteCarloLB(String[] anArgs) {
 		parseOptions(anArgs);
 		init();
 	}
 
 	private void parseOptions(String[] anArgs) {
-		OptionParser myOp = new OptionParser();
+		Configuration myConfig = new Configuration();
+		OptionSet myOptions = myConfig.produce(anArgs);
 
-		OptionSpec<Integer> myNumCoresParam = myOp.accepts("c").withOptionalArg().ofType(Integer.class).defaultsTo(2);
-		OptionSpec<Integer> mySimsPerSettingParam = myOp.accepts("s").withOptionalArg().ofType(Integer.class).defaultsTo(12);
-		OptionSpec<Integer> myRunTimeInSecondsParam = myOp.accepts("t").withOptionalArg().ofType(Integer.class).defaultsTo(60);
-		OptionSpec<Integer> myMaxContributingBucket = myOp.accepts("b").withOptionalArg().ofType(Integer.class).defaultsTo(BUCKET_SIZE_PERCENTAGES.length);
-		OptionSpec<Integer> myRequestsPerMinParam = myOp.accepts("r").withOptionalArg().ofType(Integer.class).defaultsTo(160000);
-		OptionSpec<Integer> myThrottleBaseParam = myOp.accepts("l").withOptionalArg().ofType(Integer.class).defaultsTo(25);
-		OptionSpec<Integer> myTotalNodesParam = myOp.accepts("h").withOptionalArg().ofType(Integer.class).defaultsTo(200);
-		OptionSpec<Boolean> myDebugModeParam = myOp.accepts("d").withOptionalArg().ofType(Boolean.class).defaultsTo(false);
-
-		OptionSet myOptions = myOp.parse(anArgs);
-
-		NUM_CORES = myNumCoresParam.value(myOptions);
-		SIMS_PER_SETTING = mySimsPerSettingParam.value(myOptions);
-		RUN_TIME_IN_SECONDS = myRunTimeInSecondsParam.value(myOptions);
-		MAX_CONTRIBUTING_BUCKET = myMaxContributingBucket.value(myOptions);
-		REQUESTS_PER_MINUTE = myRequestsPerMinParam.value(myOptions);
-		THROTTLE_BASE = myThrottleBaseParam.value(myOptions);
-		TOTAL_SERVERS = myTotalNodesParam.value(myOptions);
-		DEBUG_MODE = myDebugModeParam.value(myOptions);
+		NUM_CORES = myConfig._numCoresParam.value(myOptions);
+		SIMS_PER_SETTING = myConfig._simsPerSettingParam.value(myOptions);
+		RUN_TIME_IN_SECONDS = myConfig._runTimeInSecondsParam.value(myOptions);
+		MAX_CONTRIBUTING_BUCKET = myConfig._maxContributingBucket.value(myOptions);
+		REQUESTS_PER_MINUTE = myConfig._requestsPerMinParam.value(myOptions);
+		REQUESTS_PER_SEC = REQUESTS_PER_MINUTE / 60;
+		THROTTLE_BASE = myConfig._throttleBaseParam.value(myOptions);
+		TOTAL_SERVERS = myConfig._totalNodesParam.value(myOptions);
+		DEBUG_MODE = myConfig._debugModeParam.value(myOptions);
 	}
 
 	private void init() {
- 		REQUESTS_PER_SEC = REQUESTS_PER_MINUTE / 60;
-
 		BUCKET_TIMES_MILLIS = computeBucketCeilingTimes();
 
 		System.out.println();
