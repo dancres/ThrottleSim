@@ -14,39 +14,39 @@ public class MonteCarloLB {
 	
 	// Number of cores to use for simulations
 	//
-	private static Integer NUM_CORES;
+	private final Integer NUM_CORES;
 
 	// Number of cycles to run per throttle setting
 	//
-	private static Integer SIMS_PER_SETTING;
+	private final Integer SIMS_PER_SETTING;
 
 	// How long each simulated cycle should be
 	//
-	private static Integer RUN_TIME_IN_SECONDS;
+	private final Integer RUN_TIME_IN_SECONDS;
 
 	// How many buckets in the distribution to use
 	//
-	private static Integer MAX_CONTRIBUTING_BUCKET;
+	private final Integer MAX_CONTRIBUTING_BUCKET;
 
 	// Requests per minute
 	//
-	private static Integer REQUESTS_PER_MINUTE;
-	private static int REQUESTS_PER_SEC;
+	private final Integer REQUESTS_PER_MINUTE;
+	private final int REQUESTS_PER_SEC;
 
 	// Debug mode
 	//
-	private static Boolean DEBUG_MODE;
+	private final Boolean DEBUG_MODE;
 
 	// The initial setting for the per machine throttle
 	//
-	private static Integer THROTTLE_BASE;
+	private final Integer THROTTLE_BASE;
 
 	// Number of machines in the cluster
 	//
-	private static Integer TOTAL_SERVERS;
+	private final Integer TOTAL_SERVERS;
 
-	private static int[] BUCKET_TIMES_MILLIS;
-	private static int[] REQS_PER_BUCKET;
+	private final int[] BUCKET_TIMES_MILLIS;
+	private final int[] REQS_PER_BUCKET;
 
 	private static class Configuration {
 		private final OptionParser myOp = new OptionParser();
@@ -66,11 +66,6 @@ public class MonteCarloLB {
 	}
 
 	MonteCarloLB(String[] anArgs) {
-		parseOptions(anArgs);
-		init();
-	}
-
-	private void parseOptions(String[] anArgs) {
 		Configuration myConfig = new Configuration();
 		OptionSet myOptions = myConfig.produce(anArgs);
 
@@ -83,9 +78,7 @@ public class MonteCarloLB {
 		THROTTLE_BASE = myConfig._throttleBaseParam.value(myOptions);
 		TOTAL_SERVERS = myConfig._totalNodesParam.value(myOptions);
 		DEBUG_MODE = myConfig._debugModeParam.value(myOptions);
-	}
 
-	private void init() {
 		BUCKET_TIMES_MILLIS = computeBucketCeilingTimes();
 
 		System.out.println();
@@ -151,7 +144,7 @@ public class MonteCarloLB {
 				TOTAL_SERVERS);
 
 			for (int i = 0; i < SIMS_PER_SETTING; i++) {
-				Simulator myTask = new Simulator(myCurrentThrottle, generateDurations(), 
+				Simulator myTask = new Simulator(myCurrentThrottle, REQUESTS_PER_SEC, generateDurations(),
 					TOTAL_SERVERS, DEBUG_MODE);
 				mySims.add(myTask);
 				myCompletions.submit(myTask);
@@ -221,6 +214,7 @@ public class MonteCarloLB {
 		private final int _throttlePoint;
 		private final List<Long> _requestDurations;
 		private final int _totalServers;
+		private final int _reqsPerSec;
 		private final boolean _debug;
 
 		private long _requestTotal = 0;
@@ -228,8 +222,9 @@ public class MonteCarloLB {
 		private int _breachedNodeCount = 0;
 		private Map<Integer, List<Node.Breach>> _breachDetail = new HashMap<>();
 
-		Simulator(int aThrottlePoint, List<Long> aRequestDurations, int aTotalServers, boolean isDebug) {
+		Simulator(int aThrottlePoint, int aReqsPerSec, List<Long> aRequestDurations, int aTotalServers, boolean isDebug) {
 			_throttlePoint = aThrottlePoint;
+			_reqsPerSec = aReqsPerSec;
 			_requestDurations = aRequestDurations;
 			_totalServers = aTotalServers;
 			_debug = isDebug;
@@ -238,7 +233,7 @@ public class MonteCarloLB {
 		@Override
 		public Simulator call() throws Exception {
 			LB myBalancer = new LB(_totalServers,
-					new ThrottlePolicy(_throttlePoint, 1000), REQUESTS_PER_SEC, _debug);
+					new ThrottlePolicy(_throttlePoint, 1000), _reqsPerSec, _debug);
 
 			myBalancer.allocate(_requestDurations);
 
