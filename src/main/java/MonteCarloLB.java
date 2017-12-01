@@ -3,6 +3,8 @@ import java.util.concurrent.*;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.apache.commons.math3.random.RandomGenerator;
+import org.apache.commons.math3.random.SynchronizedRandomGenerator;
 import org.apache.commons.math3.random.Well44497b;
 
 public class MonteCarloLB implements DurationProducer {
@@ -52,6 +54,8 @@ public class MonteCarloLB implements DurationProducer {
 
 	private final int[] BUCKET_TIMES_MILLIS;
 	private final int[] REQS_PER_BUCKET;
+
+	private final RandomGenerator _seeder = new SynchronizedRandomGenerator(new Well44497b());
 
 	private static class Configuration {
 		private final OptionParser myOp = new OptionParser();
@@ -199,7 +203,7 @@ public class MonteCarloLB implements DurationProducer {
 		// Build request stream
 		//
 		List<Integer> myRequestDurations = new ArrayList<>(REQUESTS_PER_SEC * RUN_TIME_IN_SECONDS);
-		Well44497b myRandomizer = new Well44497b();
+		Well44497b myRandomizer = new Well44497b(_seeder.nextLong());
 
 		// Now, for each second, allocate the requests in that second according to the bucket percentages (could do this on a per minute
 		// basis but if we did, a run time of less than a minute is tougher to implement).
