@@ -40,12 +40,12 @@ class Node {
     // Active requests (which can terminate millisecond by millisecond)
     //
     private final SortedSet<Request> _requests =
-            new TreeSet<>(new ValueComparator(Node.Request::getExpiry));
+            new TreeSet<>(new ValueComparator(Request::getExpiry));
 
     // Requests in scope of the throttles
     //
     private final SortedSet<Request> _inThrottleScope =
-            new TreeSet<>(new ValueComparator(Node.Request::getStartTime));
+            new TreeSet<>(new ValueComparator(Request::getStartTime));
 
     private long _totalBreaches = 0;
     private long _totalRequests = 0;
@@ -122,13 +122,17 @@ class Node {
         while (myRequests.hasNext()) {
             Request myRequest = myRequests.next();
 
+            /*
             // If a current time is more than throttle scope ahead of request start-time...
             // List is oldest to newest so first that hasn't expired means there will be no more
             //
             if ((aCurrentTime / _policy.getScopeMillis()) >
                     (myRequest.getStartTime() / _policy.getScopeMillis())) {
+            */
+
+            if (_policy.hasExpired(myRequest, aCurrentTime))
                 myRequests.remove();
-            } else
+            else
                 break;
         }
     }
@@ -149,28 +153,6 @@ class Node {
         public String toString() {
             return "Breach @ " + _breachTime + " with queue size " + _queueSize +
                     " of which in scope " + _throttleScope + " against limit " + _limit;
-        }
-    }
-
-    private static class Request {
-        private final long _expiry;
-        private final long _startTime;
-
-        Request(int aRequestDuration, long aCurrentTime) {
-            _expiry = aRequestDuration + aCurrentTime;
-            _startTime = aCurrentTime;
-        }
-
-        long getStartTime() {
-            return _startTime;
-        }
-
-        long getExpiry() {
-            return _expiry;
-        }
-
-        boolean hasExpired(long aCurrentTime) {
-            return (aCurrentTime >= _expiry);
         }
     }
 }
