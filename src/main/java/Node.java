@@ -80,8 +80,6 @@ class Node {
     }
 
     int currentConnections(long aCurrentTime) {
-        cull(aCurrentTime);
-
         return _requests.size();
     }
 
@@ -91,6 +89,8 @@ class Node {
         Request myReq = new Request(aRequestDuration, aCurrentTime);
         _requests.add(myReq);
         _inThrottleScope.add(myReq);
+
+        cull(aCurrentTime);
 
         if (_inThrottleScope.size() > _policy.getMax()) {
             if (_recordBreaches)
@@ -125,9 +125,10 @@ class Node {
             // If a current time is more than throttle scope ahead of request start-time...
             // List is oldest to newest so first that hasn't expired means there will be no more
             //
-            if (aCurrentTime - myRequest.getStartTime() >= _policy.getScopeMillis())
+            if ((aCurrentTime / _policy.getScopeMillis()) >
+                    (myRequest.getStartTime() / _policy.getScopeMillis())) {
                 myRequests.remove();
-            else
+            } else
                 break;
         }
     }
