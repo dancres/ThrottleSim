@@ -5,20 +5,17 @@ import java.util.TreeMap;
 
 class LB {
     private final List<Node> _nodes = new ArrayList<>();
-    private final int _reqsPerSec;
-    private final double _reqsPerMillis;
     private final boolean _debug;
 
-    LB(int aNumNodes, ThrottlePolicy aPolicy, int aReqsPerSec, boolean isDebug) {
+    LB(int aNumNodes, ThrottlePolicy aPolicy, boolean isDebug) {
         for (int i = 0; i < aNumNodes; i++)
             _nodes.add(new Node(i, aPolicy, isDebug));
 
-        _reqsPerSec = aReqsPerSec;
-        _reqsPerMillis = _reqsPerSec / 1000;
         _debug = isDebug;
     }
 
-    void allocate(List<Integer> aRequestDurations) {
+    void allocate(List<Integer> aRequestDurations, int aReqsPerSec) {
+        double _reqsPerMillis = aReqsPerSec / 1000;
         long myCurrentTick = 0; // In seconds
         int myReqCount = 0;
 
@@ -42,7 +39,7 @@ class LB {
 
             // If we're done with requests for this second, start on the next
             //
-            if (myReqCount == _reqsPerSec) {
+            if (myReqCount == aReqsPerSec) {
                 ++myCurrentTick;
                 myReqCount = 0;
             }

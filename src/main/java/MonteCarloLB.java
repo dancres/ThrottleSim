@@ -160,9 +160,9 @@ public class MonteCarloLB implements DurationProducer {
 					TOTAL_NODES);
 
 			for (int i = 0; i < SIMS_PER_SETTING; i++) {
-				Simulator myTask = new Simulator(DEBUG_MODE, this,
-						new LB(TOTAL_NODES,
-								new ThrottlePolicy(myCurrentThrottle, 1000), REQUESTS_PER_SEC, DEBUG_MODE));
+				Simulator myTask = new Simulator(DEBUG_MODE, this, REQUESTS_PER_SEC,
+						new LB(TOTAL_NODES, new ThrottlePolicy(myCurrentThrottle, 1000),
+								DEBUG_MODE));
 
 				myCompletions.submit(myTask);
 			}
