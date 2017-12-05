@@ -26,12 +26,23 @@ class Node {
 
         public int compare(Request a, Request b) {
             long test = _accessor.getValue(a) - _accessor.getValue(b);
-            if (test < 0)
-                return -1;
-            else if (test > 0)
-                return 1;
+
+            // If the requests are equal on the given attribute, fall back to their id to assert an order
+            //
+            if (test == 0)
+                return normalize(a.getId() - b.getId());
             else
+                return normalize(test);
+        }
+
+        private int normalize(long aComparison) {
+            if (aComparison < 0)
+                return -1;
+            else if (aComparison > 0)
+                return 1;
+            else {
                 return 0;
+            }
         }
     }
 
@@ -80,6 +91,7 @@ class Node {
     }
 
     int currentConnections(long aCurrentTime) {
+        cull(aCurrentTime);
         return _requests.size();
     }
 
