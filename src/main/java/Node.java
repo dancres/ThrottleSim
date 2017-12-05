@@ -55,8 +55,7 @@ class Node {
 
     // Requests in scope of the throttles
     //
-    private final SortedSet<Request> _inThrottleScope =
-            new TreeSet<>(new ValueComparator(Request::getStartTime));
+    private final Queue<Request> _inThrottleScope = new LinkedList<>();
 
     private long _totalBreaches = 0;
     private long _totalRequests = 0;
@@ -133,14 +132,6 @@ class Node {
 
         while (myRequests.hasNext()) {
             Request myRequest = myRequests.next();
-
-            /*
-            // If a current time is more than throttle scope ahead of request start-time...
-            // List is oldest to newest so first that hasn't expired means there will be no more
-            //
-            if ((aCurrentTime / _policy.getScopeMillis()) >
-                    (myRequest.getStartTime() / _policy.getScopeMillis())) {
-            */
 
             if (_policy.hasExpired(myRequest, aCurrentTime))
                 myRequests.remove();
