@@ -133,7 +133,7 @@ class Node {
         while (myRequests.hasNext()) {
             Request myRequest = myRequests.next();
 
-            if (_policy.hasExpired(myRequest, aCurrentTime))
+            if (_policy.outOfScope(myRequest, aCurrentTime))
                 myRequests.remove();
             else
                 break;

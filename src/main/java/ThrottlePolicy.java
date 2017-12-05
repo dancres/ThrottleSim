@@ -15,7 +15,7 @@ class ThrottlePolicy {
         return _scopeMillis;
     }
 
-    boolean hasExpired(Request aRequest, long aCurrentTime) {
+    boolean outOfScope(Request aRequest, long aCurrentTime) {
         // If a current time is more than throttle scope ahead of request start-time...
         // List is oldest to newest so first that hasn't expired means there will be no more
         //
