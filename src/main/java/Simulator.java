@@ -20,7 +20,7 @@ class Simulator implements Callable<Simulator> {
     }
 
     @Override
-    public Simulator call() throws Exception {
+    public Simulator call() {
         _loadBalancer.allocate(_producer.produce());
 
         for (Node myNode : _loadBalancer.getNodes()) {
