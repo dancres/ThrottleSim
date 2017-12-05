@@ -36,6 +36,9 @@ public class MonteCarloLB implements DurationProducer {
 	private final Integer REQUESTS_PER_MINUTE;
 	private final int REQUESTS_PER_SEC;
 
+	// Dump node by node stats
+	private final Boolean NODE_STATS;
+
 	// Debug mode
 	//
 	private final Boolean DEBUG_MODE;
@@ -69,6 +72,7 @@ public class MonteCarloLB implements DurationProducer {
 		final OptionSpec<Integer> _throttleIncrParam = myOp.accepts("i").withOptionalArg().ofType(Integer.class).defaultsTo(5);
 		final OptionSpec<Integer> _totalNodesParam = myOp.accepts("h").withOptionalArg().ofType(Integer.class).defaultsTo(200);
 		final OptionSpec<Boolean> _debugModeParam = myOp.accepts("d").withOptionalArg().ofType(Boolean.class).defaultsTo(false);
+		final OptionSpec<Boolean> _nodeStats = myOp.accepts("ns").withOptionalArg().ofType(Boolean.class).defaultsTo(false);
 
 		OptionSet produce(String[] anArgs) {
 			return myOp.parse(anArgs);
@@ -89,6 +93,7 @@ public class MonteCarloLB implements DurationProducer {
 		THROTTLE_INCR = myConfig._throttleIncrParam.value(myOptions);
 		TOTAL_NODES = myConfig._totalNodesParam.value(myOptions);
 		DEBUG_MODE = myConfig._debugModeParam.value(myOptions);
+		NODE_STATS = myConfig._nodeStats.value(myOptions);
 
 		BUCKET_TIMES_MILLIS = computeBucketCeilingTimes();
 
@@ -170,6 +175,13 @@ public class MonteCarloLB implements DurationProducer {
 				
 				System.out.println("Simulation complete: " + myResult.getRequestTotal() + " rq w/ " + myResult.getBreachTotal() +
 					" throttled across " + myResult.getBreachedNodeTotal() + " nodes");
+
+				if (NODE_STATS) {
+					for (Node.SimDetails myDetails : myResult.simDetailsByNode())
+						System.out.println(myDetails);
+
+					System.out.println();
+				}
 
 				if (DEBUG_MODE) {
 					myResult.getBreachDetail().forEach((id, breaches) -> {
