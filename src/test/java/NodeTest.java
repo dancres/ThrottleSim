@@ -21,9 +21,48 @@ public class NodeTest {
     }
 
     @Test
-    public void testRequestCount() {
+    public void testCurrentConnections() {
+        Assert.assertEquals(0, _node.currentConnections(0));
+
         for (int i = 0; i < LIMIT / 2; i++) {
             _node.incomingRequest(1000, i);
+        }
+
+        Assert.assertEquals(LIMIT / 2, _node.currentConnections(0));
+    }
+
+    @Test
+    public void testRequestCount() {
+        Assert.assertEquals(0, _node.getRequestCount());
+
+        for (int i = 0; i < LIMIT / 2; i++) {
+            _node.incomingRequest(1000, i);
+        }
+
+        Assert.assertEquals(LIMIT / 2, _node.getRequestCount());
+    }
+
+    @Test
+    public void testCollidingCurrentConnections() {
+        Assert.assertEquals(0, _node.currentConnections(0));
+
+        for (int i = 0; i < LIMIT / 2; i++) {
+            // We want all connections to start and expire simultaneously so as to ensure we cope with collisions
+            //
+            _node.incomingRequest(1000, 0);
+        }
+
+        Assert.assertEquals(LIMIT / 2, _node.currentConnections(0));
+    }
+    
+    @Test
+    public void testCollidingRequestCount() {
+        Assert.assertEquals(0, _node.getRequestCount());
+
+        for (int i = 0; i < LIMIT / 2; i++) {
+            // We want all connections to start and expire simultaneously so as to ensure we cope with collisions
+            //
+            _node.incomingRequest(1000, 0);
         }
 
         Assert.assertEquals(LIMIT / 2, _node.getRequestCount());
@@ -42,6 +81,8 @@ public class NodeTest {
 
     @Test
     public void testSingleBreach() {
+        Assert.assertEquals(0, _node.getBreachCount());
+        
         for (int i = 0; i < LIMIT + 1; i++) {
             _node.incomingRequest(1000, i);
             _node.currentConnections(i);
