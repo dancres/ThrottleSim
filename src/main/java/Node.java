@@ -78,6 +78,8 @@ class Node {
     }
 
     List<Breach> getBreaches() {
+        assert(_recordBreaches);
+        
         return _breaches;
     }
 
