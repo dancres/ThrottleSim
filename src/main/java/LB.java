@@ -14,7 +14,18 @@ class LB {
         _debug = isDebug;
     }
 
+    /**
+     *
+     * @param aRequestDurations
+     * @param aReqsPerSec Must currently be 1000 or more
+     *
+     * TODO: Allow for less than 1000 per second (invert to millis per req)
+     */
     void allocate(List<Integer> aRequestDurations, int aReqsPerSec) {
+
+        if (aReqsPerSec < 1000)
+            throw new IllegalArgumentException("aReqsPerSec must be 1000 or more (for now");
+        
         double _reqsPerMillis = aReqsPerSec / 1000;
         long myCurrentTick = 0; // In seconds
         int myReqCount = 0;
