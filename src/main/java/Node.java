@@ -83,6 +83,38 @@ class Node {
         return _breaches;
     }
 
+    class SimDetails {
+        private final long _breaches;
+        private final long _requests;
+        private final int _id;
+
+        SimDetails(int anId, long aTotalReqs, long aTotalBreaches) {
+            _id = anId;
+            _requests = aTotalReqs;
+            _breaches = aTotalBreaches;
+        }
+
+        int getId() {
+            return _id;
+        }
+
+        long getBreachCount() {
+            return _breaches;
+        }
+
+        long getRequestCount() {
+            return _requests;
+        }
+
+        public String toString() {
+            return "Node: " + _id + " had " + _requests + " w/ " + _breaches + " breaches";
+        }
+    }
+
+    SimDetails getSimDetails() {
+        return new SimDetails(_id, _totalRequests, _totalBreaches);
+    }
+    
     long getBreachCount() {
         return _totalBreaches;
     }

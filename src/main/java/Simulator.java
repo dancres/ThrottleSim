@@ -1,4 +1,5 @@
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -50,5 +51,15 @@ class Simulator implements Callable<Simulator> {
     long getBreachTotal() { return _breachTotal; }
 
     int getBreachedNodeTotal() { return _breachedNodeCount; }
+
+    List<Node.SimDetails> simDetailsByNode() {
+        List<Node.SimDetails> myDetails = new LinkedList<>();
+
+        for (Node myNode: _loadBalancer.getNodes()) {
+            myDetails.add(myNode.getSimDetails());
+        }
+
+        return myDetails;
+    }
 }
 
