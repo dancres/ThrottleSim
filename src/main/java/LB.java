@@ -53,7 +53,7 @@ class LB {
         return _nodes;
     }
 
-    Node findTargetNode(long aCurrentTime) {
+    private Node findTargetNode(long aCurrentTime) {
         SortedMap<Integer, Node> myNodes = new TreeMap<>();
 
         for (Node myNode : _nodes)
