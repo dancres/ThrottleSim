@@ -170,8 +170,8 @@ public class MonteCarloLB implements DurationProducer {
 			for (int i = 0; i < SIMS_PER_SETTING; i++) {
 				Simulator myResult = myCompletions.take().get();
 
-				myRequestsTotal = myRequestsTotal + myResult.getRequestTotal();
-				myBreachesTotal = myBreachesTotal + myResult.getBreachTotal();
+				myRequestsTotal += myResult.getRequestTotal();
+				myBreachesTotal += myResult.getBreachTotal();
 				
 				System.out.println("Simulation complete: " + myResult.getRequestTotal() + " rq w/ " + myResult.getBreachTotal() +
 					" throttled across " + myResult.getBreachedNodeTotal() + " nodes");
