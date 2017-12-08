@@ -51,7 +51,7 @@ public class LBTest {
     }
 
     @Test
-    public void testMultiMillsecondGapBetweenRequests() {
+    public void testMultiMillisecondGapBetweenRequests() {
         ThrottlePolicy myPolicy = new ThrottlePolicy(200, 1000);
         LB myLB = new LB(2, myPolicy, false);
 
