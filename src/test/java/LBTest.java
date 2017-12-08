@@ -67,6 +67,15 @@ public class LBTest {
         Node myA = myNodes.get(0);
         Node myB = myNodes.get(1);
 
+        // Make sure the nodes are ordered lowest first in terms of request count prior to testing outcome
+        // (Different JDK implementations could produce different orders).
+        //
+        if (myA.getRequestCount() > myB.getRequestCount()) {
+            Node myTemp = myB;
+            myB = myA;
+            myA = myTemp;
+        }
+
         Assert.assertEquals(800, myA.getRequestCount());
         Assert.assertEquals(1200, myB.getRequestCount());
 
