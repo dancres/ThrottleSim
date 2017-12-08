@@ -78,7 +78,9 @@ class Node {
     }
 
     List<Breach> getBreaches() {
-        assert(_recordBreaches);
+        if (! _recordBreaches)
+            throw new IllegalStateException(
+                    "To recover breach detail, set 'shouldRecordBreaches' 'true' at construction");
         
         return _breaches;
     }
