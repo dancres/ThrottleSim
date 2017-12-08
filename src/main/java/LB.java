@@ -17,16 +17,13 @@ class LB {
     /**
      *
      * @param aRequestDurations
-     * @param aReqsPerSec Must currently be 1000 or more
-     *
-     * TODO: Allow for less than 1000 per second (invert to millis per req)
+     * @param aReqsPerSec must be > 0
      */
     void allocate(List<Integer> aRequestDurations, int aReqsPerSec) {
-
-        if (aReqsPerSec < 1000)
-            throw new IllegalArgumentException("aReqsPerSec must be 1000 or more (for now");
+        if (aReqsPerSec <= 0)
+            throw new IllegalArgumentException("Requests per Second must be > 0");
         
-        double _reqsPerMillis = aReqsPerSec / 1000;
+        double myMillisPerReq = 1000 / aReqsPerSec;
         long myCurrentTick = 0; // In seconds
         int myReqCount = 0;
 
@@ -34,10 +31,10 @@ class LB {
         //
         for (Integer myDuration : aRequestDurations) {
 
-            // Current time is a second + the request index for that second / the reqs per milli - allocate a request down to milliseconds
+            // Current time is a second + the request index for that second / the reqs per milli -
+            // allocate a request down to milliseconds
             //
-            long myCurrentTime = (long) Math.floor((myCurrentTick * 1000) + (myReqCount / _reqsPerMillis));
-
+            long myCurrentTime = (long) Math.floor((myCurrentTick * 1000) + (myReqCount * myMillisPerReq));
             boolean myOutcome = findTargetNode(myCurrentTime).incomingRequest(myDuration, myCurrentTime);
 
             if (_debug)
