@@ -34,7 +34,8 @@ class LB {
             // Current time is a second + the request index for that second / the reqs per milli -
             // allocate a request down to milliseconds
             //
-            long myCurrentTime = (long) Math.floor((myCurrentTick * 1000) + (myReqCount * myMillisPerReq));
+            // long myCurrentTime = (long) Math.floor((myCurrentTick * 1000) + (myReqCount * myMillisPerReq));
+            long myCurrentTime = Math.round((myCurrentTick * 1000) + (myReqCount * myMillisPerReq));
             boolean myOutcome = findTargetNode(myCurrentTime).incomingRequest(myDuration, myCurrentTime);
 
             if (_debug)
