@@ -201,7 +201,7 @@ public class MonteCarloLB implements DurationProducer {
 			System.out.println();
 			System.out.println("Total Requests: " + myRequestsTotal);
 			System.out.println("Total Breaches: " + myBreachesTotal);
-			System.out.format("Breaches vs Total: %% %.2e\n", ((double) myBreachesTotal / (double) myRequestsTotal) * 100);
+			System.out.format("Breaches vs Total: %% %.6g\n", ((double) myBreachesTotal / (double) myRequestsTotal) * 100);
 
 			if (myBreachesTotal == 0)
 				break;
