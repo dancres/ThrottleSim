@@ -124,12 +124,14 @@ public class MonteCarloLB implements DurationProducer {
 		System.out.print("Request distribution: ");
 
 		int[] myReqsPerBucket = new int[MAX_CONTRIBUTING_BUCKET];
+		double myBucketPercentTotal = 0.0;
 
 		for (int i = 0; i < MAX_CONTRIBUTING_BUCKET; i++) {
+			myBucketPercentTotal += BUCKET_SIZE_PERCENTAGES[i];
 			int myReqs = (int) (RUN_TIME_IN_SECONDS * REQUESTS_PER_SEC * BUCKET_SIZE_PERCENTAGES[i] / 100);
 			myReqsPerBucket[i] = (myReqs == 0) ? 1 : myReqs;
 
-			System.out.print("(" + i + ") " + myReqsPerBucket[i] + " requests ");
+			System.out.format("(" + i + ") " + myReqsPerBucket[i] + " requests (%.4g%%) ", myBucketPercentTotal);
 		}
 
 		System.out.println();
