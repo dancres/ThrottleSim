@@ -154,10 +154,11 @@ public class MonteCarloLB implements DurationProducer {
 		CompletionService<Simulator> myCompletions = new ExecutorCompletionService<>(myExecutor);
 
 		int myCurrentThrottle = THROTTLE_BASE;
-		
-		while (true) {
+		long myBreachesTotal;
+
+		do {
 			long myRequestsTotal = 0;
-			long myBreachesTotal = 0;
+			myBreachesTotal = 0;
 
 			System.out.println("Throttle limit: " + myCurrentThrottle + " requests per server of which there are: " +
 					TOTAL_NODES);
@@ -203,13 +204,10 @@ public class MonteCarloLB implements DurationProducer {
 			System.out.println("Total Breaches: " + myBreachesTotal);
 			System.out.format("Breaches vs Total: %% %.6g\n", ((double) myBreachesTotal / (double) myRequestsTotal) * 100);
 
-			if (myBreachesTotal == 0)
-				break;
-			else {
-				myCurrentThrottle += THROTTLE_INCR;
-				System.out.println();
-			}
-		}
+			myCurrentThrottle += THROTTLE_INCR;
+			System.out.println();
+			
+		} while (myBreachesTotal != 0);
 
 		myExecutor.shutdownNow();
 	}
