@@ -1,8 +1,8 @@
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 class Simulator implements Callable<Simulator> {
     private final boolean _debug;
@@ -56,13 +56,7 @@ class Simulator implements Callable<Simulator> {
     int getBreachedNodeTotal() { return _breachedNodeCount; }
 
     List<Node.SimDetails> simDetailsByNode() {
-        List<Node.SimDetails> myDetails = new LinkedList<>();
-
-        for (Node myNode: _loadBalancer.getNodes()) {
-            myDetails.add(myNode.getSimDetails());
-        }
-
-        return myDetails;
+        return _loadBalancer.getNodes().stream().map(Node::getSimDetails).collect(Collectors.toList());
     }
 }
 
