@@ -60,12 +60,19 @@ class LB {
     }
 
     private Node findTargetNode(long aCurrentTime) {
-        SortedMap<Integer, Node> myNodes = new TreeMap<>();
+        int myFavouriteConnectionCount = Integer.MAX_VALUE;
+        Node myFavouriteNode = null;
 
-        for (Node myNode : _nodes)
-            myNodes.put(myNode.currentConnections(aCurrentTime), myNode);
+        for (Node myNode: _nodes) {
+            int myConnectionCount = myNode.currentConnections(aCurrentTime);
 
-        return myNodes.get(myNodes.firstKey());
+            if (myConnectionCount < myFavouriteConnectionCount) {
+                myFavouriteConnectionCount = myConnectionCount;
+                myFavouriteNode = myNode;
+            }
+        }
+
+        return myFavouriteNode;
     }
 }
 
