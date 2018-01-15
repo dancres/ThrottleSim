@@ -107,8 +107,8 @@ public class MonteCarloLB implements DurationProducer {
 
 		System.out.print("Bucket ceilings: ");
 
-		for (int i = 0; i < MAX_CONTRIBUTING_BUCKET; i++) {
-			myBucketTimeCeilings[1 + i] = 100 * (1 + i);
+		for (int i = 1; i <= MAX_CONTRIBUTING_BUCKET; i++) {
+			myBucketTimeCeilings[i] = 100 * i;
 		}
 
 		for (int i = 1; i < myBucketTimeCeilings.length; i++)
