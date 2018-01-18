@@ -37,11 +37,6 @@
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>net.sourceforge.javacsv</groupId>
-            <artifactId>javacsv</artifactId>
-            <version>2.1</version>
-        </dependency>
     </dependencies>
 
     <build>
@@ -52,8 +47,8 @@
               <version>3.1</version>
               <configuration>
                   <compilerArgument>-Xlint:deprecation,unchecked</compilerArgument>                
-                  <source>9</source>
-                  <target>9</target>
+                  <source>1.9</source>
+                  <target>1.9</target>
               </configuration>
             </plugin>
 
