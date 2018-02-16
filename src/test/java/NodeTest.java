@@ -71,8 +71,8 @@ public class NodeTest {
     @Test
     public void testNoBreach() {
         for (int i = 0; i < LIMIT - 1; i++) {
-            _node.incomingRequest(1000, i);
             _node.currentConnections(i);
+            _node.incomingRequest(1000, i);
         }
 
         Assert.assertEquals(LIMIT - 1, _node.getRequestCount());
@@ -84,8 +84,8 @@ public class NodeTest {
         Assert.assertEquals(0, _node.getBreachCount());
         
         for (int i = 0; i < LIMIT + 1; i++) {
-            _node.incomingRequest(1000, i);
             _node.currentConnections(i);
+            _node.incomingRequest(1000, i);
         }
 
         Assert.assertEquals(LIMIT + 1, _node.getRequestCount());
@@ -97,9 +97,9 @@ public class NodeTest {
         for (int breach = 0; breach < 5; breach++)
             for (int i = 0; i < LIMIT + 1; i++) {
                 // System.err.println("Request: " + breach + "," + i + "," + (i + (breach * SCOPE)));
-                
-                _node.incomingRequest(1000, i + (breach * SCOPE));
+
                 _node.currentConnections(i + (breach * SCOPE));
+                _node.incomingRequest(1000, i + (breach * SCOPE));
             }
 
         Assert.assertEquals((LIMIT + 1) * 5, _node.getRequestCount());
