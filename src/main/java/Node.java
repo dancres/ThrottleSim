@@ -147,21 +147,16 @@ class Node {
     }
 
     private void cull(long aCurrentTime) {
-        Iterator<Request> myRequests = _requests.iterator();
+        Request myRequest;
 
-        while (myRequests.hasNext()) {
-            Request myRequest = myRequests.next();
-
+        while ((!_requests.isEmpty()) && (myRequest = _requests.first()) != null) {
             // List is oldest to newest so first that hasn't expired means there will be no more
             //
             if (myRequest.hasExpired(aCurrentTime))
-                myRequests.remove();
+                _requests.remove(myRequest);
             else
                 break;
         }
-
-
-        Request myRequest;
 
         while ((myRequest = _inThrottleScope.peek()) != null) {
             if (_policy.outOfScope(myRequest, aCurrentTime))
