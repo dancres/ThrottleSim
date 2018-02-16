@@ -47,10 +47,6 @@ public class MonteCarloLB {
 	//
 	private final Integer THROTTLE_BASE;
 
-	// The increment post-breach, to apply to throttle for each round of simulations
-	//
-	private final Integer THROTTLE_INCR;
-
 	// Number of machines in the cluster
 	//
 	private final Integer TOTAL_NODES;
@@ -69,7 +65,6 @@ public class MonteCarloLB {
 		final OptionSpec<Integer> _maxContributingBucket = myOp.accepts("b").withOptionalArg().ofType(Integer.class).defaultsTo(BUCKET_SIZE_PERCENTAGES.length);
 		final OptionSpec<Integer> _requestsPerMinParam = myOp.accepts("r").withOptionalArg().ofType(Integer.class).defaultsTo(160000);
 		final OptionSpec<Integer> _throttleBaseParam = myOp.accepts("l").withOptionalArg().ofType(Integer.class).defaultsTo(25);
-		final OptionSpec<Integer> _throttleIncrParam = myOp.accepts("i").withOptionalArg().ofType(Integer.class).defaultsTo(5);
 		final OptionSpec<Integer> _totalNodesParam = myOp.accepts("h").withOptionalArg().ofType(Integer.class).defaultsTo(200);
 		final OptionSpec<Boolean> _debugModeParam = myOp.accepts("d").withOptionalArg().ofType(Boolean.class).defaultsTo(false);
 		final OptionSpec<Boolean> _nodeStats = myOp.accepts("ns").withOptionalArg().ofType(Boolean.class).defaultsTo(false);
@@ -90,7 +85,6 @@ public class MonteCarloLB {
 		REQUESTS_PER_MINUTE = myConfig._requestsPerMinParam.value(myOptions);
 		REQUESTS_PER_SEC = REQUESTS_PER_MINUTE / 60;
 		THROTTLE_BASE = myConfig._throttleBaseParam.value(myOptions);
-		THROTTLE_INCR = myConfig._throttleIncrParam.value(myOptions);
 		TOTAL_NODES = myConfig._totalNodesParam.value(myOptions);
 		DEBUG_MODE = myConfig._debugModeParam.value(myOptions);
 		NODE_STATS = myConfig._nodeStats.value(myOptions);
@@ -189,7 +183,32 @@ public class MonteCarloLB {
 			System.out.println("Total Breaches: " + myBreachesTotal);
 			System.out.format("Breaches vs Total: %% %.6g\n", ((double) myBreachesTotal / (double) myRequestsTotal) * 100);
 
-			myCurrentThrottle += THROTTLE_INCR;
+			/*
+ 			 Generally, if we increment the throttle by 1 we expect to approx halve the number of breaches.
+ 			 Thus to determine the number of steps x we'd need to take, we must solve:
+
+ 			 current_beaches - 2 ^ x = 0
+
+ 			 Thus:
+
+ 			 breaches = 2^x
+
+ 			 We can solve this with logs as log10(breaches) / log10(2)
+
+ 			 This likely over-estimates though as reduction in breaches tends toward exponential so
+ 			 we pick something in the middle thus (log10(breaches) / log10(2)) / 2 and update the throttle
+ 			 by that amount. To avoid non-termination we apply max(1).
+			*/
+
+			if (myBreachesTotal != 0) {
+				double myApproxIncr = Math.ceil(Math.log10(myBreachesTotal) / Math.log10(2));
+				int myIncr = (int) Math.max(Math.ceil(myApproxIncr / 2.0), 1.0);
+
+				System.out.println("Computed Increment: " + myIncr);
+
+				myCurrentThrottle += myIncr;
+			}
+
 			System.out.println();
 			
 		} while (myBreachesTotal != 0);
