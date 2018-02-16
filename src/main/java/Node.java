@@ -96,10 +96,6 @@ class Node {
             _breaches = aTotalBreaches;
         }
 
-        int getId() {
-            return _id;
-        }
-
         long getBreachCount() {
             return _breaches;
         }

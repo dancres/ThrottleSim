@@ -1,4 +1,3 @@
-import java.util.*;
 import java.util.concurrent.*;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -7,7 +6,7 @@ import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.SynchronizedRandomGenerator;
 import org.apache.commons.math3.random.Well44497b;
 
-public class MonteCarloLB implements DurationProducer {
+public class MonteCarloLB {
 	// Percentage of requests that fall in 100ms ranges starting at 0-100ms (long-tailed distribution so trimmed & not summing to 100%)
 	//
 	private static final double[] BUCKET_SIZE_PERCENTAGES = {12.62, 25.58, 9.53, 7.04, 6.15, 5.42, 4.58, 3.74,
@@ -57,7 +56,7 @@ public class MonteCarloLB implements DurationProducer {
 	private final Integer TOTAL_NODES;
 
 	private final int[] BUCKET_TIMES_MILLIS;
-	private final int[] REQS_PER_BUCKET;
+	private final Bucket[] PROTOTYPE_BUCKETS;
 
 	private final RandomGenerator _seeder = new SynchronizedRandomGenerator(new Well44497b());
 
@@ -79,7 +78,7 @@ public class MonteCarloLB implements DurationProducer {
 			return myOp.parse(anArgs);
 		}
 	}
-
+	
 	private MonteCarloLB(String[] anArgs) {
 		Configuration myConfig = new Configuration();
 		OptionSet myOptions = myConfig.produce(anArgs);
@@ -98,7 +97,13 @@ public class MonteCarloLB implements DurationProducer {
 
 		BUCKET_TIMES_MILLIS = computeBucketCeilingTimes();
 
-		REQS_PER_BUCKET = computeRequestsPerBucket();
+		PROTOTYPE_BUCKETS = new TimeCeilingBucket[MAX_CONTRIBUTING_BUCKET];
+
+		for (int i = 0; i < MAX_CONTRIBUTING_BUCKET; i++) {
+			PROTOTYPE_BUCKETS[i] = new TimeCeilingBucket(BUCKET_TIMES_MILLIS[i + 1], BUCKET_SIZE_PERCENTAGES[i],
+					RUN_TIME_IN_SECONDS * REQUESTS_PER_SEC);
+			System.out.println(PROTOTYPE_BUCKETS[i]);
+		}
 	}
 
 	private int[] computeBucketCeilingTimes() {
@@ -118,26 +123,6 @@ public class MonteCarloLB implements DurationProducer {
 		System.out.println();
 
 		return myBucketTimeCeilings;
-	}
-
-	private int[] computeRequestsPerBucket() {
-		System.out.print("Request distribution: ");
-
-		int[] myReqsPerBucket = new int[MAX_CONTRIBUTING_BUCKET];
-		double myBucketPercentTotal = 0.0;
-
-		for (int i = 0; i < MAX_CONTRIBUTING_BUCKET; i++) {
-			myBucketPercentTotal += BUCKET_SIZE_PERCENTAGES[i];
-			int myReqs = (int) (RUN_TIME_IN_SECONDS * REQUESTS_PER_SEC * BUCKET_SIZE_PERCENTAGES[i] / 100);
-			myReqsPerBucket[i] = (myReqs == 0) ? 1 : myReqs;
-
-			System.out.format("(" + i + ") " + myReqsPerBucket[i] + " requests (%.4g%%) ", myBucketPercentTotal);
-		}
-
-		System.out.println();
-		System.out.println();
-		
-		return myReqsPerBucket;
 	}
 
 	public static void main(String[] anArgs) throws Exception {
@@ -164,9 +149,9 @@ public class MonteCarloLB implements DurationProducer {
 					TOTAL_NODES);
 
 			for (int i = 0; i < SIMS_PER_SETTING; i++) {
-				Simulator myTask = new Simulator(DEBUG_MODE, this, REQUESTS_PER_SEC,
+				Simulator myTask = new Simulator(DEBUG_MODE, PROTOTYPE_BUCKETS, REQUESTS_PER_SEC,
 						new LB(TOTAL_NODES, new ThrottlePolicy(myCurrentThrottle, 1000),
-								DEBUG_MODE));
+								DEBUG_MODE), new Well44497b(_seeder.nextLong()));
 
 				myCompletions.submit(myTask);
 			}
@@ -210,28 +195,5 @@ public class MonteCarloLB implements DurationProducer {
 		} while (myBreachesTotal != 0);
 
 		myExecutor.shutdownNow();
-	}
-
-	public List<Integer> produce() {
-		// Build request stream
-		//
-		List<Integer> myRequestDurations = new ArrayList<>(REQUESTS_PER_SEC * RUN_TIME_IN_SECONDS);
-		Well44497b myRandomizer = new Well44497b(_seeder.nextLong());
-
-		// Now, for each second, allocate the requests in that second according to the bucket percentages (could do this on a per minute
-		// basis but if we did, a run time of less than a minute is tougher to implement).
-		//
-		for (int j = 0; j < MAX_CONTRIBUTING_BUCKET; j++) {
-			int baseTime = BUCKET_TIMES_MILLIS[j];
-			int randomStep = BUCKET_TIMES_MILLIS[j+1] - baseTime;
-
-			for (int k = 0; k < REQS_PER_BUCKET[j]; k++) {
-				int myReqDuration = baseTime + myRandomizer.nextInt(randomStep + 1);
-				myRequestDurations.add(myReqDuration);
-			}
-		}
-
-		Collections.shuffle(myRequestDurations);
-		return myRequestDurations;		
 	}
 }

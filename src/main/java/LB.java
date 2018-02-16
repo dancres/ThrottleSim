@@ -1,7 +1,5 @@
 import java.util.ArrayList;
 import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 class LB {
     private final List<Node> _nodes = new ArrayList<>();
@@ -15,11 +13,9 @@ class LB {
     }
 
     /**
-     *
-     * @param aRequestDurations
      * @param aReqsPerSec must be > 0
      */
-    void allocate(List<Integer> aRequestDurations, int aReqsPerSec) {
+    void allocate(BucketConsumer aConsumer, int aReqsPerSec) {
         if (aReqsPerSec <= 0)
             throw new IllegalArgumentException("Requests per Second must be > 0");
         
@@ -29,7 +25,8 @@ class LB {
 
         // Scatter the requests evenly across the seconds of runtime millisecond by millisecond
         //
-        for (Integer myDuration : aRequestDurations) {
+        while (aConsumer.hasNext()) {
+            Integer myDuration = aConsumer.nextDuration();
 
             // Current time is a second + the request index for that second / the reqs per milli -
             // allocate a request down to milliseconds

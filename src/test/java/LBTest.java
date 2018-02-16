@@ -1,19 +1,19 @@
+import org.apache.commons.math3.random.Well44497b;
 import org.junit.Assert;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 
-import java.util.LinkedList;
 import java.util.List;
 
 public class LBTest {
-    private static List<Integer> _reqDurations;
+    private BucketConsumer _consumer;
 
-    @BeforeClass
-    public static void setup() {
-        _reqDurations = new LinkedList<>();
+    @Before
+    public void setup() {
+        Bucket[] myBuckets = new Bucket[1];
+        myBuckets[0] = new FixedDurationBucket(50, 2000);
 
-        for (int i = 0; i < 2000; i++)
-            _reqDurations.add(50);
+        _consumer = new BucketConsumer(myBuckets, new Well44497b());
     }
     
     @Test
@@ -21,7 +21,7 @@ public class LBTest {
         ThrottlePolicy myPolicy = new ThrottlePolicy(500, 1000);
         LB myLB = new LB(2, myPolicy, false);
 
-        myLB.allocate(_reqDurations, 1000);
+        myLB.allocate(_consumer, 1000);
 
         Assert.assertEquals(2, myLB.getNodes().size());
         
@@ -38,7 +38,7 @@ public class LBTest {
         ThrottlePolicy myPolicy = new ThrottlePolicy(450, 1000);
         LB myLB = new LB(2, myPolicy, false);
 
-        myLB.allocate(_reqDurations, 1000);
+        myLB.allocate(_consumer, 1000);
 
         Assert.assertEquals(2, myLB.getNodes().size());
 
@@ -55,7 +55,7 @@ public class LBTest {
         ThrottlePolicy myPolicy = new ThrottlePolicy(200, 1000);
         LB myLB = new LB(2, myPolicy, false);
 
-        myLB.allocate(_reqDurations, 100);
+        myLB.allocate(_consumer, 100);
 
         Assert.assertEquals(2, myLB.getNodes().size());
 
@@ -90,7 +90,7 @@ public class LBTest {
         ThrottlePolicy myPolicy = new ThrottlePolicy(500, 1000);
         LB myLB = new LB(2, myPolicy, false);
 
-        myLB.allocate(_reqDurations, -5);
+        myLB.allocate(_consumer, -5);
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -98,6 +98,6 @@ public class LBTest {
         ThrottlePolicy myPolicy = new ThrottlePolicy(500, 1000);
         LB myLB = new LB(2, myPolicy, false);
 
-        myLB.allocate(_reqDurations, 0);
+        myLB.allocate(_consumer, 0);
     }
 }
