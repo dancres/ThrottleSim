@@ -133,8 +133,6 @@ class Node {
         _requests.add(myReq);
         _inThrottleScope.add(myReq);
 
-        cull(aCurrentTime);
-
         if (_inThrottleScope.size() > _policy.getMax()) {
             if (_recordBreaches)
                 _breaches.add(new Breach(aCurrentTime, _requests.size(), _inThrottleScope.size(), _policy.getMax()));
