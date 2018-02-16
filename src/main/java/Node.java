@@ -160,13 +160,12 @@ class Node {
                 break;
         }
 
-        myRequests = _inThrottleScope.iterator();
 
-        while (myRequests.hasNext()) {
-            Request myRequest = myRequests.next();
+        Request myRequest;
 
+        while ((myRequest = _inThrottleScope.peek()) != null) {
             if (_policy.outOfScope(myRequest, aCurrentTime))
-                myRequests.remove();
+                _inThrottleScope.remove();
             else
                 break;
         }
