@@ -195,14 +195,12 @@ public class MonteCarloLB {
 
  			 We can solve this with logs as log10(breaches) / log10(2)
 
- 			 This likely over-estimates though as reduction in breaches tends toward exponential so
- 			 we pick something in the middle thus (log10(breaches) / log10(2)) / 2 and update the throttle
- 			 by that amount. To avoid non-termination we apply max(1).
+ 			 To avoid non-termination we apply max(1).
 			*/
 
 			if (myBreachesTotal != 0) {
 				double myApproxIncr = Math.ceil(Math.log10(myBreachesTotal) / Math.log10(2));
-				int myIncr = (int) Math.max(Math.ceil(myApproxIncr / 2.0), 1.0);
+				int myIncr = (int) Math.max(myApproxIncr, 1.0);
 
 				System.out.println("Computed Increment: " + myIncr);
 
