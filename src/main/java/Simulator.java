@@ -10,7 +10,6 @@ class Simulator implements Callable<Simulator> {
     private final boolean _debug;
     private final LB _loadBalancer;
     private final int _reqsPerSec;
-    private final RandomGenerator _rng;
     private final BucketConsumer _consumer;
     private long _requestTotal = 0;
     private long _breachTotal = 0;
@@ -24,7 +23,6 @@ class Simulator implements Callable<Simulator> {
         _consumer = new BucketConsumer(aBuckets, aGen);
         _reqsPerSec = aReqsPerSec;
         _loadBalancer = aBalancer;
-        _rng = aGen;
     }
 
     @Override
