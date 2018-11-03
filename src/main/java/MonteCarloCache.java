@@ -5,6 +5,7 @@ import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.SynchronizedRandomGenerator;
 import org.apache.commons.math3.random.Well44497b;
 
+import java.util.ArrayList;
 import java.util.concurrent.*;
 
 public class MonteCarloCache {
@@ -70,7 +71,7 @@ public class MonteCarloCache {
         CompletionService<Sim> myCompletions = new ExecutorCompletionService<>(myExecutor);
 
         for (int i = 0; i < NUM_SIMS; i++) {
-            Sim myTask = new Sim(NUM_CACHES, PROTOTYPE_BUCKETS, new Well44497b(_seeder.nextLong()));
+            Sim myTask = new Sim(NUM_CACHES, CACHE_SIZE, PROTOTYPE_BUCKETS, new Well44497b(_seeder.nextLong()));
 
             myCompletions.submit(myTask);
         }
@@ -89,30 +90,34 @@ public class MonteCarloCache {
 
     private static class Sim implements Callable<Sim> {
         private final BucketConsumer _consumer;
-        private final LruCache[] _caches;
+        private final int _numCaches;
+        private final ArrayList<LruCache<Integer, Integer>> _caches;
+        private final int _cacheSize;
         private final RandomGenerator _rng;
 
         private int _misses = 0;
         private int _hits = 0;
 
-        Sim(int aNumCaches, Bucket[] aBuckets, RandomGenerator aGen) {
+        Sim(int aNumCaches, int aCacheSize, Bucket[] aBuckets, RandomGenerator aGen) {
             _rng = aGen;
             _consumer = new BucketConsumer(aBuckets, aGen);
-            _caches = new LruCache[aNumCaches];
+            _cacheSize = aCacheSize;
+            _numCaches = aNumCaches;
+            _caches = new ArrayList<>(_numCaches);
             
             for (int i = 0; i < aNumCaches; i++)
-                _caches[i] = new LruCache(67000);
+                _caches.add(new LruCache<>(_cacheSize));
         }
 
         @Override
         public Sim call() {
             while (_consumer.hasNext()) {
-                LruCache myChoice = _caches[_rng.nextInt(_caches.length)];
+                LruCache<Integer, Integer> myChoice = _caches.get(_rng.nextInt(_numCaches));
                 int myKey = _consumer.nextSample();
 
-                if (myChoice.getEntry(myKey) == -1) {
+                if (myChoice.get(myKey) == null) {
                     ++_misses;
-                    myChoice.putEntry(myKey, myKey);
+                    myChoice.put(myKey, myKey);
                 } else
                     ++_hits;
             }
