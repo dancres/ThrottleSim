@@ -15,7 +15,7 @@ public class BucketConsumerTest {
         int myFifties = 0;
 
         while (myConsumer.hasNext()) {
-            int myOutput = myConsumer.nextDuration();
+            int myOutput = myConsumer.nextSample();
 
             switch (myOutput) {
                 case 50 : ++myFifties ; break;
@@ -36,7 +36,7 @@ public class BucketConsumerTest {
         int myTotal = 0;
 
         while (myConsumer.hasNext()) {
-            myConsumer.nextDuration();
+            myConsumer.nextSample();
             myTotal++;
         }
 

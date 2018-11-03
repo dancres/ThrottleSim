@@ -14,7 +14,7 @@ public class BucketConsumer {
         _rng = anRNG;
     }
 
-    int nextDuration() {
+    int nextSample() {
         if (_buckets.size() == 0) {
             throw new IllegalStateException();
         }
