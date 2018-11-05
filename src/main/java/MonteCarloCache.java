@@ -113,7 +113,7 @@ public class MonteCarloCache {
         public Sim call() {
             while (_consumer.hasNext()) {
                 LruCache<Integer, Integer> myChoice = _caches.get(_rng.nextInt(_numCaches));
-                int myKey = _consumer.nextSample();
+                Integer myKey = _consumer.nextSample();
 
                 if (myChoice.get(myKey) == null) {
                     ++_misses;
