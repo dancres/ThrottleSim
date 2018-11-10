@@ -25,7 +25,7 @@ class LB {
 
         // Scatter the requests evenly across the seconds of runtime millisecond by millisecond
         //
-        while (aConsumer.hasNext()) {
+        while (aConsumer.claim()) {
             Integer myDuration = aConsumer.nextSample();
 
             // Current time is a second + the request index for that second / the reqs per milli -

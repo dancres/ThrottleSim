@@ -112,7 +112,7 @@ public class MonteCarloCache {
 
         @Override
         public Sim call() {
-            while (_consumer.hasNext()) {
+            while (_consumer.claim()) {
                 Map<Integer, Integer> myChoice = _caches.get(_rng.nextInt(_numCaches));
                 Integer myKey = _consumer.nextSample();
 

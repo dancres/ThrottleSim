@@ -14,7 +14,7 @@ public class BucketConsumerTest {
         int myOneHundreds = 0;
         int myFifties = 0;
 
-        while (myConsumer.hasNext()) {
+        while (myConsumer.claim()) {
             int myOutput = myConsumer.nextSample();
 
             switch (myOutput) {
@@ -35,7 +35,7 @@ public class BucketConsumerTest {
 
         int myTotal = 0;
 
-        while (myConsumer.hasNext()) {
+        while (myConsumer.claim()) {
             myConsumer.nextSample();
             myTotal++;
         }
