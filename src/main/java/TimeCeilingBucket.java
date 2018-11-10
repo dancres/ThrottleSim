@@ -18,6 +18,7 @@ class TimeCeilingBucket implements Bucket {
         _remainingRequests = aRemaining;
     }
 
+    @Override
     public int draw(RandomGenerator anRNG) {
         if (_remainingRequests == 0)
             throw new IllegalStateException();
@@ -27,10 +28,12 @@ class TimeCeilingBucket implements Bucket {
         return _baseTime + anRNG.nextInt(100);
     }
 
-    public boolean isExhausted() {
-        return _remainingRequests == 0;
+    @Override
+    public int numRemaining() {
+        return _remainingRequests;
     }
 
+    @Override
     public Bucket copy() {
         return new TimeCeilingBucket(_baseTime, _reqsPercentage,
                 _reqCount, _remainingRequests);

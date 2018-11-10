@@ -21,11 +21,12 @@ class FixedDurationBucket implements Bucket {
         return _duration;
     }
 
-    @Override
-    public boolean isExhausted() {
-        return _remainingRequests == 0;
-    }
 
+    @Override
+    public int numRemaining() {
+        return _remainingRequests;
+    }
+    
     @Override
     public Bucket copy() {
         return new FixedDurationBucket(_duration, _totalRequests);

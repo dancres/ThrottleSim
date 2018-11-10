@@ -17,8 +17,8 @@ public class CacheKeyBucket implements Bucket {
     }
 
     @Override
-    public boolean isExhausted() {
-        return (_remaining == 0);
+    public int numRemaining() {
+        return _remaining;
     }
 
     @Override

@@ -6,16 +6,21 @@ import java.util.List;
 public class BucketConsumer {
     private final List<Bucket> _buckets = new ArrayList<>();
     private final RandomGenerator _rng;
+    private int _numRemaining;
 
     BucketConsumer(Bucket[] aTemplateBuckets, RandomGenerator anRNG) {
-        for (Bucket myB : aTemplateBuckets)
-            _buckets.add(myB.copy());
+        for (Bucket myB : aTemplateBuckets) {
+            Bucket myBucket = myB.copy();
+
+            _buckets.add(myBucket);
+            _numRemaining += myBucket.numRemaining();
+        }
 
         _rng = anRNG;
     }
 
     int nextSample() {
-        if (_buckets.size() == 0) {
+        if (_numRemaining == 0) {
             throw new IllegalStateException();
         }
         
@@ -23,13 +28,15 @@ public class BucketConsumer {
         Bucket myBucket = _buckets.get(myChoice);
         int myDuration = myBucket.draw(_rng);
 
-        if (myBucket.isExhausted())
+        if (myBucket.numRemaining() == 0)
             _buckets.remove(myChoice);
 
+        --_numRemaining;
+        
         return myDuration;
     }
 
     boolean hasNext() {
-        return _buckets.size() != 0;
+        return (_numRemaining != 0);
     }
 }
