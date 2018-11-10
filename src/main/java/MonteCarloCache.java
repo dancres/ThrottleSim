@@ -116,10 +116,9 @@ public class MonteCarloCache {
                 Map<Integer, Integer> myChoice = _caches.get(_rng.nextInt(_numCaches));
                 Integer myKey = _consumer.nextSample();
 
-                if (myChoice.get(myKey) == null) {
+                if (myChoice.putIfAbsent(myKey, myKey) == null)
                     ++_misses;
-                    myChoice.put(myKey, myKey);
-                } else
+                else
                     ++_hits;
             }
 
