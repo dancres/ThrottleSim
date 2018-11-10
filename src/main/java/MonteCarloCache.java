@@ -125,11 +125,11 @@ public class MonteCarloCache {
             return this;
         }
 
-        public int getHits() {
+        int getHits() {
             return _hits;
         }
 
-        public int getMisses() {
+        int getMisses() {
             return _misses;
         }
     }

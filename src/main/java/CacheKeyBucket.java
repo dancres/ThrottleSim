@@ -1,6 +1,6 @@
 import org.apache.commons.math3.random.RandomGenerator;
 
-public class CacheKeyBucket implements Bucket {
+class CacheKeyBucket implements Bucket {
     private int _id;
     private int _remaining;
 
