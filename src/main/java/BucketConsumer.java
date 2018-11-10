@@ -31,10 +31,12 @@ public class BucketConsumer {
         if (myBucket.numRemaining() == 0)
             _buckets.remove(myChoice);
 
+        --_numRemaining;
+        
         return myDuration;
     }
 
     boolean hasNext() {
-        return _buckets.size() != 0;
+        return (_numRemaining != 0);
     }
 }
