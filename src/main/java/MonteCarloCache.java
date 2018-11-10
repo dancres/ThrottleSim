@@ -6,6 +6,7 @@ import org.apache.commons.math3.random.SynchronizedRandomGenerator;
 import org.apache.commons.math3.random.Well44497b;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.concurrent.*;
 
 public class MonteCarloCache {
@@ -91,7 +92,7 @@ public class MonteCarloCache {
     private static class Sim implements Callable<Sim> {
         private final BucketConsumer _consumer;
         private final int _numCaches;
-        private final ArrayList<LruCache<Integer, Integer>> _caches;
+        private final ArrayList<Map<Integer, Integer>> _caches;
         private final int _cacheSize;
         private final RandomGenerator _rng;
 
@@ -112,7 +113,7 @@ public class MonteCarloCache {
         @Override
         public Sim call() {
             while (_consumer.hasNext()) {
-                LruCache<Integer, Integer> myChoice = _caches.get(_rng.nextInt(_numCaches));
+                Map<Integer, Integer> myChoice = _caches.get(_rng.nextInt(_numCaches));
                 Integer myKey = _consumer.nextSample();
 
                 if (myChoice.get(myKey) == null) {
