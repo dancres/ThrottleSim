@@ -23,7 +23,7 @@ public class BucketConsumer {
         if (_numRemaining == 0) {
             throw new IllegalStateException();
         }
-        
+
         int myChoice = _rng.nextInt(_buckets.size());
         Bucket myBucket = _buckets.get(myChoice);
         int myDuration = myBucket.draw(_rng);
@@ -31,12 +31,10 @@ public class BucketConsumer {
         if (myBucket.numRemaining() == 0)
             _buckets.remove(myChoice);
 
-        --_numRemaining;
-        
         return myDuration;
     }
 
     boolean hasNext() {
-        return (_numRemaining != 0);
+        return _buckets.size() != 0;
     }
 }
