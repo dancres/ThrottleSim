@@ -6,7 +6,7 @@ import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.SynchronizedRandomGenerator;
 import org.apache.commons.math3.random.Well44497b;
 
-public class MonteCarloLB {
+class MonteCarloLB {
 	// Percentage of requests that fall in 100ms ranges starting at 0-100ms (long-tailed distribution so trimmed & not summing to 100%)
 	//
 	private static final double[] BUCKET_SIZE_PERCENTAGES = {12.62, 25.58, 9.53, 7.04, 6.15, 5.42, 4.58, 3.74,

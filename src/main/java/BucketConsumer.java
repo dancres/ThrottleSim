@@ -3,7 +3,7 @@ import org.apache.commons.math3.random.RandomGenerator;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BucketConsumer {
+class BucketConsumer {
     private final List<Bucket> _buckets = new ArrayList<>();
     private final RandomGenerator _rng;
     private int _numRemaining;
