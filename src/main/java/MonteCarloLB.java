@@ -51,7 +51,6 @@ public class MonteCarloLB {
 	//
 	private final Integer TOTAL_NODES;
 
-	private final int[] BUCKET_TIMES_MILLIS;
 	private final Bucket[] PROTOTYPE_BUCKETS;
 
 	private final RandomGenerator _seeder = new SynchronizedRandomGenerator(new Well44497b());
@@ -89,12 +88,12 @@ public class MonteCarloLB {
 		DEBUG_MODE = myConfig._debugModeParam.value(myOptions);
 		NODE_STATS = myConfig._nodeStats.value(myOptions);
 
-		BUCKET_TIMES_MILLIS = computeBucketCeilingTimes();
+		int[] myBucketTimeMillis = computeBucketCeilingTimes();
 
 		PROTOTYPE_BUCKETS = new TimeCeilingBucket[MAX_CONTRIBUTING_BUCKET];
 
 		for (int i = 0; i < MAX_CONTRIBUTING_BUCKET; i++) {
-			PROTOTYPE_BUCKETS[i] = new TimeCeilingBucket(BUCKET_TIMES_MILLIS[i + 1], BUCKET_SIZE_PERCENTAGES[i],
+			PROTOTYPE_BUCKETS[i] = new TimeCeilingBucket(myBucketTimeMillis[i + 1], BUCKET_SIZE_PERCENTAGES[i],
 					RUN_TIME_IN_SECONDS * REQUESTS_PER_SEC);
 			System.out.println(PROTOTYPE_BUCKETS[i]);
 		}
