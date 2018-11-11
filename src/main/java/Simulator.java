@@ -14,8 +14,7 @@ class Simulator implements Callable<Simulator> {
     private long _requestTotal = 0;
     private long _breachTotal = 0;
     private int _breachedNodeCount = 0;
-
-    private Map<Integer, List<Node.Breach>> _breachDetail = new HashMap<>();
+    private final Map<Integer, List<Node.Breach>> _breachDetail = new HashMap<>();
 
     Simulator(boolean isDebug, Bucket[] aBuckets, int aReqsPerSec, LB aBalancer,
               RandomGenerator aGen) {

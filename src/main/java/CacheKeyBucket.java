@@ -1,7 +1,7 @@
 import org.apache.commons.math3.random.RandomGenerator;
 
 class CacheKeyBucket implements Bucket {
-    private int _id;
+    private final int _id;
     private int _remaining;
 
     CacheKeyBucket(int myId, int myNumCases) {

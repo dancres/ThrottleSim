@@ -1,8 +1,8 @@
 import org.apache.commons.math3.random.RandomGenerator;
 
 class FixedDurationBucket implements Bucket {
-    private int _duration;
-    private int _totalRequests;
+    private final int _duration;
+    private final int _totalRequests;
     private int _remainingRequests;
 
     FixedDurationBucket(int aDuration, int aTotalRequests) {
