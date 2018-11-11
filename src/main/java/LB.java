@@ -19,7 +19,7 @@ class LB {
         if (aReqsPerSec <= 0)
             throw new IllegalArgumentException("Requests per Second must be > 0");
         
-        double myMillisPerReq = 1000 / aReqsPerSec;
+        double myMillisPerReq = 1000.0 / aReqsPerSec;
         long myCurrentTick = 0; // In seconds
         int myReqCount = 0;
 
