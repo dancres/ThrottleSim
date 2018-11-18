@@ -2,6 +2,8 @@ import org.apache.commons.math3.random.Well44497b;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import sample.Bucket;
+import sample.BucketConsumer;
 
 import java.util.List;
 

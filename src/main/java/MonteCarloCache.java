@@ -4,6 +4,8 @@ import joptsimple.OptionSpec;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.SynchronizedRandomGenerator;
 import org.apache.commons.math3.random.Well44497b;
+import sample.Bucket;
+import sample.BucketConsumer;
 
 import java.util.ArrayList;
 import java.util.Collections;

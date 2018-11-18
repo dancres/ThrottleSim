@@ -1,3 +1,5 @@
+package sample;
+
 import org.apache.commons.math3.random.RandomGenerator;
 
 public interface Bucket<T> {

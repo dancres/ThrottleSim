@@ -1,4 +1,6 @@
 import org.apache.commons.math3.random.RandomGenerator;
+import sample.Bucket;
+import sample.BucketConsumer;
 
 import java.util.HashMap;
 import java.util.List;

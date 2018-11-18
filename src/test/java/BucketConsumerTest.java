@@ -1,6 +1,8 @@
 import org.apache.commons.math3.random.Well44497b;
 import org.junit.Assert;
 import org.junit.Test;
+import sample.Bucket;
+import sample.BucketConsumer;
 
 public class BucketConsumerTest {
     @Test

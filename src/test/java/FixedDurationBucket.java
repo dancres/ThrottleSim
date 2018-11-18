@@ -1,4 +1,5 @@
 import org.apache.commons.math3.random.RandomGenerator;
+import sample.Bucket;
 
 class FixedDurationBucket implements Bucket<Integer> {
     private final int _duration;
