@@ -6,6 +6,8 @@ import org.apache.commons.math3.random.SynchronizedRandomGenerator;
 import org.apache.commons.math3.random.Well44497b;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -64,22 +66,17 @@ public class MonteCarloCache {
     private void simulate() throws Exception {
         System.out.println("Sims: " + NUM_SIMS + " for total keys " + NUM_KEYS + " @ cache size " +
                 CACHE_SIZE + " w/ " + NUM_CACHES + " caches at scale: " + SCALE);
-        
+
         System.out.println("Cores: " + NUM_CORES);
 
         ThreadPoolExecutor myExecutor = new ThreadPoolExecutor(NUM_CORES, NUM_CORES, 30,
                 TimeUnit.SECONDS, new LinkedBlockingQueue<>());
-        CompletionService<Sim> myCompletions = new ExecutorCompletionService<>(myExecutor);
 
         for (int i = 0; i < NUM_SIMS; i++) {
-            Sim myTask = new Sim(NUM_CACHES, CACHE_SIZE, PROTOTYPE_BUCKETS, new Well44497b(_seeder.nextLong()));
+            Sim myTask = new Sim(myExecutor, NUM_CACHES, CACHE_SIZE, PROTOTYPE_BUCKETS, _seeder.nextLong());
 
-            myCompletions.submit(myTask);
-        }
-
-        for (int i = 0; i < NUM_SIMS; i++) {
-            Sim myResult = myCompletions.take().get();
-            System.out.println("Hits: " + myResult.getHits() + " Misses: " + myResult.getMisses());
+            myTask.invoke();
+            System.out.println("Hits: " + myTask.getHits() + " Misses: " + myTask.getMisses());
         }
 
         myExecutor.shutdownNow();
@@ -89,40 +86,69 @@ public class MonteCarloCache {
         new MonteCarloCache(anArgs).simulate();
     }
 
-    private static class Sim implements Callable<Sim> {
+    private static class Sim {
+        private static final int BATCH_SIZE = 50;
+
         private final BucketConsumer _consumer;
-        private final int _numCaches;
-        private final ArrayList<Map<Integer, Integer>> _caches;
+        private final List<Map<Integer, Integer>> _caches;
         private final int _cacheSize;
         private final RandomGenerator _rng;
+        private final CompletionService<Requester> _completions;
 
-        private int _misses = 0;
-        private int _hits = 0;
+        private int _hits;
+        private int _misses;
+        private int _taskCount;
 
-        Sim(int aNumCaches, int aCacheSize, Bucket[] aBuckets, RandomGenerator aGen) {
-            _rng = aGen;
-            _consumer = new BucketConsumer(aBuckets, aGen);
+        Sim(ThreadPoolExecutor anExec, int aNumCaches, int aCacheSize, Bucket[] aBuckets, long aSeed) {
+            _rng = new Well44497b(aSeed);
+            _consumer = new BucketConsumer(aBuckets, _rng);
             _cacheSize = aCacheSize;
-            _numCaches = aNumCaches;
-            _caches = new ArrayList<>(_numCaches);
-            
+            _completions = new ExecutorCompletionService<>(anExec);
+
+            ArrayList<Map<Integer, Integer>> myCaches = new ArrayList<>();
+
             for (int i = 0; i < aNumCaches; i++)
-                _caches.add(new LruCache<>(_cacheSize));
+                myCaches.add(new LruCache<>(_cacheSize));
+
+            _caches = Collections.unmodifiableList(myCaches);
         }
 
-        @Override
-        public Sim call() {
-            while (_consumer.claim()) {
-                Map<Integer, Integer> myChoice = _caches.get(_rng.nextInt(_numCaches));
-                Integer myKey = _consumer.nextSample();
+        void invoke() throws Exception {
+            List<Integer> mySamples = new ArrayList<>(BATCH_SIZE);
 
-                if (myChoice.putIfAbsent(myKey, myKey) == null)
-                    ++_misses;
-                else
-                    ++_hits;
+            while (_consumer.claim()) {
+                mySamples.add(_consumer.nextSample());
+
+                if (mySamples.size() == BATCH_SIZE) {
+                    dispatch(mySamples);
+                    mySamples = new ArrayList<>(BATCH_SIZE);
+                    consume();
+                }
             }
 
-            return this;
+            dispatch(mySamples);
+            
+            for (int i = 0; i < _taskCount; i++)
+                consume(_completions.take().get());
+        }
+
+        private void dispatch(List<Integer> aSamples) {
+            _completions.submit(new Requester(aSamples, _rng.nextLong()));
+            ++_taskCount;
+        }
+
+        private void consume() throws Exception {
+            Future<Requester> myF = _completions.poll();
+
+            if (myF != null) {
+                consume(myF.get());
+                --_taskCount;
+            }
+        }
+
+        private void consume(Requester aReq) {
+            _misses += aReq.getMiss();
+            _hits += aReq.getHit();
         }
 
         int getHits() {
@@ -131,6 +157,52 @@ public class MonteCarloCache {
 
         int getMisses() {
             return _misses;
+        }
+
+        private class Requester implements Callable<Requester> {
+            private final List<Integer> _keys;
+            private RandomGenerator _randomizer;
+            private int _hit;
+            private int _miss;
+
+            Requester(List<Integer> aKeys, long aSeed) {
+                _keys = aKeys;
+                _randomizer = new Well44497b(aSeed);
+            }
+
+            @Override
+            public Requester call() {
+                _keys.forEach(k -> {
+                    Map<Integer, Integer> myChoice = _caches.get(_randomizer.nextInt(_caches.size()));
+
+                    boolean didMiss;
+
+                    synchronized (myChoice) {
+                        didMiss = (myChoice.putIfAbsent(k, k) == null);
+                    }
+
+                    if (didMiss)
+                        ++_miss;
+                    else
+                        ++_hit;
+                });
+
+                tidyUp();
+                return this;
+            }
+
+            private void tidyUp() {
+                _keys.clear();
+                _randomizer = null;
+            }
+
+            private int getHit() {
+                return _hit;
+            }
+
+            private int getMiss() {
+                return _miss;
+            }
         }
     }
 }
