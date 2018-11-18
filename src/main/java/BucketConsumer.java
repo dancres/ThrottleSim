@@ -6,14 +6,12 @@ import java.util.List;
 class BucketConsumer {
     private final List<Bucket> _buckets = new ArrayList<>();
     private final RandomGenerator _rng;
-    private int _numRemaining;
 
     BucketConsumer(Bucket[] aTemplateBuckets, RandomGenerator anRNG) {
         for (Bucket myB : aTemplateBuckets) {
             Bucket myBucket = myB.copy();
 
             _buckets.add(myBucket);
-            _numRemaining += myBucket.numRemaining();
         }
 
         _rng = anRNG;
@@ -31,10 +29,6 @@ class BucketConsumer {
     }
 
     boolean claim() {
-        boolean myProceed = (_numRemaining != 0);
-
-        --_numRemaining;
-
-        return myProceed;
+        return _buckets.size() != 0;
     }
 }
