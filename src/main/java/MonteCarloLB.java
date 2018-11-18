@@ -51,7 +51,7 @@ class MonteCarloLB {
 	//
 	private final Integer TOTAL_NODES;
 
-	private final Bucket[] PROTOTYPE_BUCKETS;
+	private final Bucket<Integer>[] PROTOTYPE_BUCKETS;
 
 	private final RandomGenerator _seeder = new SynchronizedRandomGenerator(new Well44497b());
 

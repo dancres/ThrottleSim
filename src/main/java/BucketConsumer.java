@@ -3,13 +3,13 @@ import org.apache.commons.math3.random.RandomGenerator;
 import java.util.ArrayList;
 import java.util.List;
 
-class BucketConsumer {
-    private final List<Bucket> _buckets = new ArrayList<>();
+class BucketConsumer<T> {
+    private final List<Bucket<T>> _buckets = new ArrayList<>();
     private final RandomGenerator _rng;
 
-    BucketConsumer(Bucket[] aTemplateBuckets, RandomGenerator anRNG) {
-        for (Bucket myB : aTemplateBuckets) {
-            Bucket myBucket = myB.copy();
+    BucketConsumer(Bucket<T>[] aTemplateBuckets, RandomGenerator anRNG) {
+        for (Bucket<T> myB : aTemplateBuckets) {
+            Bucket<T> myBucket = myB.copy();
 
             _buckets.add(myBucket);
         }
@@ -17,15 +17,15 @@ class BucketConsumer {
         _rng = anRNG;
     }
 
-    int nextSample() {
+    T nextSample() {
         int myChoice = _rng.nextInt(_buckets.size());
-        Bucket myBucket = _buckets.get(myChoice);
-        int myDuration = myBucket.draw(_rng);
+        Bucket<T> myBucket = _buckets.get(myChoice);
+        T mySample = myBucket.draw(_rng);
 
         if (myBucket.numRemaining() == 0)
             _buckets.remove(myChoice);
 
-        return myDuration;
+        return mySample;
     }
 
     boolean claim() {

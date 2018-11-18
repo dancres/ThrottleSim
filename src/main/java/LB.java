@@ -15,7 +15,7 @@ class LB {
     /**
      * @param aReqsPerSec must be > 0
      */
-    void allocate(BucketConsumer aConsumer, int aReqsPerSec) {
+    void allocate(BucketConsumer<Integer> aConsumer, int aReqsPerSec) {
         if (aReqsPerSec <= 0)
             throw new IllegalArgumentException("Requests per Second must be > 0");
         

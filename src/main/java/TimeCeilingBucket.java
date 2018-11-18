@@ -1,6 +1,6 @@
 import org.apache.commons.math3.random.RandomGenerator;
 
-class TimeCeilingBucket implements Bucket {
+class TimeCeilingBucket implements Bucket<Integer> {
     private final int _baseTime;
     private final double _reqsPercentage;
     private final int _reqCount;
@@ -19,7 +19,7 @@ class TimeCeilingBucket implements Bucket {
     }
 
     @Override
-    public int draw(RandomGenerator anRNG) {
+    public Integer draw(RandomGenerator anRNG) {
         if (_remainingRequests == 0)
             throw new IllegalStateException();
         else
@@ -34,7 +34,7 @@ class TimeCeilingBucket implements Bucket {
     }
 
     @Override
-    public Bucket copy() {
+    public Bucket<Integer> copy() {
         return new TimeCeilingBucket(_baseTime, _reqsPercentage,
                 _reqCount, _remainingRequests);
     }

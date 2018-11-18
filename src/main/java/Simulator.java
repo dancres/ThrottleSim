@@ -10,16 +10,16 @@ class Simulator implements Callable<Simulator> {
     private final boolean _debug;
     private final LB _loadBalancer;
     private final int _reqsPerSec;
-    private final BucketConsumer _consumer;
+    private final BucketConsumer<Integer> _consumer;
     private long _requestTotal = 0;
     private long _breachTotal = 0;
     private int _breachedNodeCount = 0;
     private final Map<Integer, List<Node.Breach>> _breachDetail = new HashMap<>();
 
-    Simulator(boolean isDebug, Bucket[] aBuckets, int aReqsPerSec, LB aBalancer,
+    Simulator(boolean isDebug, Bucket<Integer>[] aBuckets, int aReqsPerSec, LB aBalancer,
               RandomGenerator aGen) {
         _debug = isDebug;
-        _consumer = new BucketConsumer(aBuckets, aGen);
+        _consumer = new BucketConsumer<>(aBuckets, aGen);
         _reqsPerSec = aReqsPerSec;
         _loadBalancer = aBalancer;
     }

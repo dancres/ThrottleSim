@@ -1,9 +1,9 @@
 import org.apache.commons.math3.random.RandomGenerator;
 
-public interface Bucket {
-    int draw(RandomGenerator anRNG);
+public interface Bucket<T> {
+    T draw(RandomGenerator anRNG);
 
     int numRemaining();
 
-    Bucket copy();
+    Bucket<T> copy();
 }

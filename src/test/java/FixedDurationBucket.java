@@ -1,6 +1,6 @@
 import org.apache.commons.math3.random.RandomGenerator;
 
-class FixedDurationBucket implements Bucket {
+class FixedDurationBucket implements Bucket<Integer> {
     private final int _duration;
     private final int _totalRequests;
     private int _remainingRequests;
@@ -12,7 +12,7 @@ class FixedDurationBucket implements Bucket {
     }
 
     @Override
-    public int draw(RandomGenerator anRNG) {
+    public Integer draw(RandomGenerator anRNG) {
         if (_remainingRequests == 0)
             throw new IllegalStateException();
         else
@@ -28,7 +28,7 @@ class FixedDurationBucket implements Bucket {
     }
     
     @Override
-    public Bucket copy() {
+    public Bucket<Integer> copy() {
         return new FixedDurationBucket(_duration, _totalRequests);
     }
 }

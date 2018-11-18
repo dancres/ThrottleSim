@@ -1,6 +1,6 @@
 import org.apache.commons.math3.random.RandomGenerator;
 
-class CacheKeyBucket implements Bucket {
+class CacheKeyBucket implements Bucket<Integer> {
     private final int _id;
     private int _remaining;
 
@@ -10,7 +10,7 @@ class CacheKeyBucket implements Bucket {
     }
 
     @Override
-    public int draw(RandomGenerator anRNG) {
+    public Integer draw(RandomGenerator anRNG) {
         --_remaining;
 
         return _id;
@@ -22,7 +22,7 @@ class CacheKeyBucket implements Bucket {
     }
 
     @Override
-    public Bucket copy() {
+    public Bucket<Integer> copy() {
         return new CacheKeyBucket(_id, _remaining);
     }
 

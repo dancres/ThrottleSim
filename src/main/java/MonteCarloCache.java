@@ -21,7 +21,7 @@ public class MonteCarloCache {
     private final int CACHE_SIZE;
     private final int SCALE;
 
-    private final Bucket[] PROTOTYPE_BUCKETS;
+    private final Bucket<Integer>[] PROTOTYPE_BUCKETS;
 
     private static class Configuration {
         private final OptionParser myOp = new OptionParser();
@@ -89,7 +89,7 @@ public class MonteCarloCache {
     private static class Sim {
         private static final int BATCH_SIZE = 50;
 
-        private final BucketConsumer _consumer;
+        private final BucketConsumer<Integer> _consumer;
         private final List<Map<Integer, Integer>> _caches;
         private final int _cacheSize;
         private final RandomGenerator _rng;
@@ -99,9 +99,9 @@ public class MonteCarloCache {
         private int _misses;
         private int _taskCount;
 
-        Sim(ThreadPoolExecutor anExec, int aNumCaches, int aCacheSize, Bucket[] aBuckets, long aSeed) {
+        Sim(ThreadPoolExecutor anExec, int aNumCaches, int aCacheSize, Bucket<Integer>[] aBuckets, long aSeed) {
             _rng = new Well44497b(aSeed);
-            _consumer = new BucketConsumer(aBuckets, _rng);
+            _consumer = new BucketConsumer<>(aBuckets, _rng);
             _cacheSize = aCacheSize;
             _completions = new ExecutorCompletionService<>(anExec);
 

@@ -6,14 +6,15 @@ import org.junit.Test;
 import java.util.List;
 
 public class LBTest {
-    private BucketConsumer _consumer;
+    private BucketConsumer<Integer> _consumer;
 
     @Before
     public void setup() {
-        Bucket[] myBuckets = new Bucket[1];
+        @SuppressWarnings("unchecked")
+        Bucket<Integer>[] myBuckets = new Bucket[1];
         myBuckets[0] = new FixedDurationBucket(50, 2000);
 
-        _consumer = new BucketConsumer(myBuckets, new Well44497b());
+        _consumer = new BucketConsumer<>(myBuckets, new Well44497b());
     }
     
     @Test
