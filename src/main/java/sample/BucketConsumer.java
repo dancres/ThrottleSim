@@ -1,7 +1,6 @@
 package sample;
 
 import org.apache.commons.math3.random.RandomGenerator;
-import sample.Bucket;
 
 import java.util.ArrayList;
 import java.util.List;
