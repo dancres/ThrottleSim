@@ -2,7 +2,6 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.apache.commons.math3.random.RandomGenerator;
-import org.apache.commons.math3.random.SynchronizedRandomGenerator;
 import org.apache.commons.math3.random.Well44497b;
 import sample.Bucket;
 import sample.BucketConsumer;
@@ -14,7 +13,7 @@ import java.util.Map;
 import java.util.concurrent.*;
 
 public class MonteCarloCache {
-    private final RandomGenerator _seeder = new SynchronizedRandomGenerator(new Well44497b());
+    private final RandomGenerator _seeder = new Well44497b();
 
     private final int NUM_CORES;
     private final int NUM_SIMS;
